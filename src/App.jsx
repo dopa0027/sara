@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import FloatingParticles from './components/FloatingParticles';
-import AudioPlayer from './components/AudioPlayer';
 import AudioBridge from './components/AudioBridge';
+import HeaderNav from './components/HeaderNav';
+import FrontHero from './components/FrontHero';
+import SpecialNoteModal from './components/SpecialNoteModal';
 import ProgressBar from './components/ProgressBar';
 import StartScreen from './components/StartScreen';
 import Level1Slider from './components/Level1Slider';
@@ -15,32 +17,26 @@ import Level7FinalPromise from './components/Level7FinalPromise';
 import FinalSurpriseLetter from './components/FinalSurpriseLetter';
 
 export default function App() {
-  const [stage, setStage] = useState(() => {
-    try {
-      const saved = localStorage.getItem('sara_love_story_stage');
-      return saved !== null ? parseInt(saved, 10) : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [stage, setStage] = useState(0); // 0 = Front Page (Hero), 1..8 = Challenges, 9 = Final Surprise & Gallery
+  const [isNoteOpen, setIsNoteOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('sara_love_story_stage', stage.toString());
-    } catch {
-      // storage unavailable
-    }
     // Scroll smoothly to top on stage change
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [stage]);
 
+  const handleNavigate = (view) => {
+    if (view === 'home') {
+      setStage(0);
+    } else if (view === 'surprise') {
+      setStage(1);
+    } else if (view === 'photos' || view === 'always') {
+      setStage(9);
+    }
+  };
+
   const handleRestart = () => {
     setStage(0);
-    try {
-      localStorage.removeItem('sara_love_story_stage');
-    } catch {
-      // ignore
-    }
   };
 
   return (
@@ -48,13 +44,22 @@ export default function App() {
       {/* Background Floating Hearts & Stars */}
       <FloatingParticles />
 
-      {/* Invisible YouTube Audio Bridge (pure audio, NO video in bottom right!) */}
+      {/* Invisible Autoplay Music Engine (plays song automatically on site open!) */}
       <AudioBridge />
 
-      {/* Floating Glassmorphic Audio Controller */}
-      <AudioPlayer />
+      {/* Top Header Navigation matching screenshot */}
+      <HeaderNav
+        onOpenNote={() => setIsNoteOpen(true)}
+        onNavigate={handleNavigate}
+      />
 
-      {/* Progress Bar (Stages 1 through 8) */}
+      {/* Special Note Modal matching Image 2 */}
+      <SpecialNoteModal
+        isOpen={isNoteOpen}
+        onClose={() => setIsNoteOpen(false)}
+      />
+
+      {/* Progress Bar (Visible during challenges 1 through 8) */}
       {stage >= 1 && stage <= 8 && (
         <ProgressBar
           currentLevel={stage}
@@ -63,9 +68,17 @@ export default function App() {
         />
       )}
 
-      {/* Screen Views */}
+      {/* Main Content Area */}
       <main className="main-content">
-        {stage === 0 && <StartScreen onStart={() => setStage(1)} />}
+        {/* Stage 0: Front Page exactly matching Image 1 */}
+        {stage === 0 && (
+          <FrontHero
+            onOpenSurprise={() => setStage(1)}
+            onOpenNote={() => setIsNoteOpen(true)}
+          />
+        )}
+
+        {/* 7 Challenges & Special Ganga Ghat Memory */}
         {stage === 1 && <Level1Slider onNext={() => setStage(2)} />}
         {stage === 2 && <Level2Drama onNext={() => setStage(3)} />}
         {stage === 3 && <Level3CatchHeart onNext={() => setStage(4)} />}
@@ -74,7 +87,13 @@ export default function App() {
         {stage === 6 && <Level5SendLove onNext={() => setStage(7)} />}
         {stage === 7 && <Level6FavouritePerson onNext={() => setStage(8)} />}
         {stage === 8 && <Level7FinalPromise onUnlockLetter={() => setStage(9)} />}
-        {stage === 9 && <FinalSurpriseLetter onRestart={handleRestart} />}
+
+        {/* Final Love Letter, Cake & Memories Gallery */}
+        {stage === 9 && (
+          <FinalSurpriseLetter
+            onRestart={handleRestart}
+          />
+        )}
       </main>
     </div>
   );

@@ -1,10 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { romanticAudio } from '../utils/romanticAudioEngine';
 
-// YouTube video IDs:
-// 1. "Tera Hone Laga Hoon" (From user's link: oeYgD5w3NQo / Tips Official: useznoRhrWU)
-// 2. "Until I Found You" (Stephen Sanchez: GxldQ9GyX3I)
-// 3. "Boyfriend Banale" (Special track: 7w2r4o3B6W4 / energetic pop)
 const YT_TRACK_MAP = {
   'tera-hone-laga-hoon': 'oeYgD5w3NQo',
   'until-i-found-you': 'GxldQ9GyX3I',
@@ -13,9 +9,36 @@ const YT_TRACK_MAP = {
 
 export default function AudioBridge() {
   const iframeRef = useRef(null);
-  const playerStateRef = useRef({ isPlaying: false, trackId: 'tera-hone-laga-hoon' });
+  const playerStateRef = useRef({ isPlaying: true, trackId: 'tera-hone-laga-hoon' });
 
+  // Autoplay immediately on mount
   useEffect(() => {
+    // 1. Trigger audio engine play state
+    romanticAudio.play(0);
+
+    // 2. Set iframe autoplay immediately
+    if (iframeRef.current) {
+      iframeRef.current.src = `https://www.youtube-nocookie.com/embed/oeYgD5w3NQo?autoplay=1&enablejsapi=1&playsinline=1&controls=0&disablekb=1&fs=0&loop=1&playlist=oeYgD5w3NQo`;
+    }
+
+    // 3. Fallback: on any initial touch/scroll/click on the screen, ensure playback is unmuted & active
+    const startOnAnyInteraction = () => {
+      romanticAudio.play(0);
+      if (iframeRef.current && (!iframeRef.current.src || iframeRef.current.src === 'about:blank')) {
+        iframeRef.current.src = `https://www.youtube-nocookie.com/embed/oeYgD5w3NQo?autoplay=1&enablejsapi=1&playsinline=1&controls=0&disablekb=1&fs=0&loop=1&playlist=oeYgD5w3NQo`;
+      }
+      window.removeEventListener('pointerdown', startOnAnyInteraction);
+      window.removeEventListener('touchstart', startOnAnyInteraction);
+      window.removeEventListener('scroll', startOnAnyInteraction);
+      window.removeEventListener('click', startOnAnyInteraction);
+    };
+
+    window.addEventListener('pointerdown', startOnAnyInteraction, { passive: true });
+    window.addEventListener('touchstart', startOnAnyInteraction, { passive: true });
+    window.addEventListener('scroll', startOnAnyInteraction, { passive: true });
+    window.addEventListener('click', startOnAnyInteraction, { passive: true });
+
+    // 4. Sync with audio state changes
     const handleSync = (state) => {
       const prev = playerStateRef.current;
       const trackId =
@@ -32,8 +55,7 @@ export default function AudioBridge() {
 
         if (state.isPlaying) {
           const ytId = YT_TRACK_MAP[trackId] || 'oeYgD5w3NQo';
-          // Completely hidden audio bridge - ZERO video display in bottom right!
-          iframeRef.current.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&disablekb=1&fs=0&loop=1&rel=0`;
+          iframeRef.current.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&disablekb=1&fs=0&loop=1&playlist=${ytId}`;
         } else {
           iframeRef.current.src = 'about:blank';
         }
@@ -41,11 +63,16 @@ export default function AudioBridge() {
     };
 
     const unsubscribe = romanticAudio.subscribe(handleSync);
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      window.removeEventListener('pointerdown', startOnAnyInteraction);
+      window.removeEventListener('touchstart', startOnAnyInteraction);
+      window.removeEventListener('scroll', startOnAnyInteraction);
+      window.removeEventListener('click', startOnAnyInteraction);
+    };
   }, []);
 
   return (
-    // Strictly hidden audio element - NO VIDEO BOX!
     <div
       aria-hidden="true"
       style={{
@@ -62,9 +89,9 @@ export default function AudioBridge() {
     >
       <iframe
         ref={iframeRef}
-        title="Background Music Stream"
+        title="Background Music Player"
         src="about:blank"
-        allow="autoplay"
+        allow="autoplay; encrypted-media"
         tabIndex="-1"
       />
     </div>
