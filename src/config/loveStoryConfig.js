@@ -85,5 +85,32 @@ export const loveStoryConfig = {
       "Four years down, and so many beautiful memories still waiting for us.",
       "I love you. Always keep smiling for me. 🥹💗"
     ]
-  }
+  },
+
+  // Romantic Shayari Collection
+  shayariList: [
+    {
+      id: "istikhara",
+      title: "Zara Thehar Ae Dil ♡",
+      tag: "Dil Ki Baat",
+      lines: [
+        "Ab main iske rahun ya kinara kar lun",
+        "Zara thehar ae dil, main istikhara kar lun",
+        "Istikhara ye kehta hai ke kinara kar lun",
+        "Dil ye kehta hai ke istikhara dobara kar lun"
+      ]
+    },
+    {
+      id: "birthday-dua",
+      title: "Saal-Girah Ki Dua 🎂",
+      tag: "My Birthday Prayer",
+      lines: [
+        "Tumhari saal-girah par ye dua hai meri,",
+        "Ke har lamha tumhein khushiyan hazar milein.",
+        "Khuda se manga hai jo maine har dua mein,",
+        "Mujhe zindagi bhar tumhara wo pyaar milein.",
+        "Happy Birthday, My Love! ❤️"
+      ]
+    }
+  ]
 };

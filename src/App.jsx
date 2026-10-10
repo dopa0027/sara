@@ -4,6 +4,7 @@ import AudioBridge from './components/AudioBridge';
 import HeaderNav from './components/HeaderNav';
 import FrontHero from './components/FrontHero';
 import SpecialNoteModal from './components/SpecialNoteModal';
+import ShayariSection from './components/ShayariSection';
 import ProgressBar from './components/ProgressBar';
 import StartScreen from './components/StartScreen';
 import Level1Slider from './components/Level1Slider';
@@ -28,6 +29,13 @@ export default function App() {
   const handleNavigate = (view) => {
     if (view === 'home') {
       setStage(0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (view === 'shayari') {
+      setStage(0);
+      setTimeout(() => {
+        const el = document.getElementById('shayari-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
     } else if (view === 'surprise') {
       setStage(1);
     } else if (view === 'photos' || view === 'always') {
@@ -70,12 +78,15 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="main-content">
-        {/* Stage 0: Front Page exactly matching Image 1 */}
+        {/* Stage 0: Front Page exactly matching Image 1 + Shayari Section */}
         {stage === 0 && (
-          <FrontHero
-            onOpenSurprise={() => setStage(1)}
-            onOpenNote={() => setIsNoteOpen(true)}
-          />
+          <>
+            <FrontHero
+              onOpenSurprise={() => setStage(1)}
+              onOpenNote={() => setIsNoteOpen(true)}
+            />
+            <ShayariSection />
+          </>
         )}
 
         {/* 7 Challenges & Special Ganga Ghat Memory */}
