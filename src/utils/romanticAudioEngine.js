@@ -40,6 +40,8 @@ class RomanticAudioEngine {
         392.00, 466.16, 523.25, 587.33, 523.25, 466.16, 392.00, 466.16
       ]
     };
+    this.volume = 1;
+    this.isDucked = false;
   }
 
   subscribe(listener) {
@@ -53,6 +55,8 @@ class RomanticAudioEngine {
         isPlaying: this.isPlaying,
         isMuted: this.isMuted,
         trackIndex: this.currentTrackIndex,
+        volume: this.volume,
+        isDucked: this.isDucked,
       })
     );
   }
@@ -201,16 +205,19 @@ class RomanticAudioEngine {
   }
 
   setVolume(val) {
+    this.volume = val;
     if (this.gainNode && this.audioContext) {
       this.gainNode.gain.setValueAtTime(val * 0.2, this.audioContext.currentTime);
     }
     if (this.audioElement) {
       this.audioElement.volume = val;
     }
+    this.notify();
   }
 
   softDucking(reduce = true) {
     // Slightly lower music volume during deep emotional moments / letter reading
+    this.isDucked = reduce;
     const target = reduce ? 0.08 : 0.2;
     if (this.gainNode && this.audioContext) {
       this.gainNode.gain.linearRampToValueAtTime(target, this.audioContext.currentTime + 1.2);
@@ -218,6 +225,7 @@ class RomanticAudioEngine {
     if (this.audioElement) {
       this.audioElement.volume = reduce ? 0.35 : 0.8;
     }
+    this.notify();
   }
 }
 

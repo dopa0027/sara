@@ -1,21 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Music, Volume2, Sparkles } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
 import { romanticAudio } from '../utils/romanticAudioEngine';
 
-// Official, high-quality, embeddable YouTube Tracks
-const YT_TRACK_MAP = {
-  'tera-hone-laga-hoon': '843x5r2iTig', // Tips Official - Tera Hone Laga Hoon (Atif Aslam)
-  'until-i-found-you': 'GxldQ9GyX3I',
-  'boyfriend-banale': '7w2r4o3B6W4',
-};
+// Official Tips YouTube video ID as secondary fallback if HTML5 audio fails
+const YT_FALLBACK_ID = '843x5r2iTig';
 
 export default function AudioBridge() {
+  const audioRef = useRef(null);
   const iframeRef = useRef(null);
-  const playerStateRef = useRef({ isPlaying: false, trackId: null });
-  const [showAutoplayPrompt, setShowAutoplayPrompt] = useState(false);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const usingFallbackRef = useRef(false);
 
-  // Send command to embedded YouTube player
+  // Helper to send postMessage commands to YouTube iframe fallback if active
   const sendIframeCommand = (func, args = []) => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
       try {
@@ -23,110 +17,149 @@ export default function AudioBridge() {
           JSON.stringify({ event: 'command', func, args }),
           '*'
         );
-      } catch (err) {
+      } catch {
         // Safe fallback
       }
     }
   };
 
-  const playSong = () => {
-    sendIframeCommand('unMute');
-    sendIframeCommand('setVolume', [100]);
-    sendIframeCommand('playVideo');
-    setShowAutoplayPrompt(false);
+  const attemptPlay = () => {
+    if (usingFallbackRef.current) {
+      sendIframeCommand('unMute');
+      sendIframeCommand('setVolume', [100]);
+      sendIframeCommand('playVideo');
+      return;
+    }
+
+    if (audioRef.current) {
+      audioRef.current.volume = romanticAudio.isDucked ? 0.35 : (romanticAudio.volume ?? 1);
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            romanticAudio.isPlaying = true;
+            romanticAudio.notify();
+          })
+          .catch(() => {
+            // Browser blocked unmuted autoplay without prior interaction.
+            // Will start on very first touch/scroll/click.
+          });
+      }
+    }
   };
 
-  const pauseSong = () => {
-    sendIframeCommand('pauseVideo');
+  const attemptPause = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    if (usingFallbackRef.current) {
+      sendIframeCommand('pauseVideo');
+    }
   };
 
   useEffect(() => {
-    const ytId = YT_TRACK_MAP['tera-hone-laga-hoon']; // '843x5r2iTig'
+    // 1. Immediately attempt unmuted autoplay on initial page load
+    attemptPlay();
 
-    // 1. Immediately set the iframe to official Tips track
-    if (iframeRef.current) {
-      iframeRef.current.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&disablekb=1&fs=0&loop=1&playlist=${ytId}`;
-    }
+    // Staggered attempts in case DOM or audio buffer is ready a few ms later
+    const t1 = setTimeout(attemptPlay, 100);
+    const t2 = setTimeout(attemptPlay, 400);
+    const t3 = setTimeout(attemptPlay, 1000);
 
-    // 2. Set audio engine playing
-    romanticAudio.play(0);
-
-    // 3. Attempt unmuted playback immediately
-    const initialPlayTimer = setTimeout(() => {
-      playSong();
-    }, 500);
-
-    // 4. Browser autoplay policy handling:
-    // If the browser blocks unmuted sound because of no prior user interaction,
-    // fire unMute & playVideo on the very first touch, click, scroll or keypress!
-    const handleFirstUserInteraction = () => {
-      setHasUserInteracted(true);
-      setShowAutoplayPrompt(false);
-      playSong();
-      cleanupListeners();
+    // 2. Global invisible user-interaction trigger:
+    // If mobile Safari/Chrome strictly blocks unmuted audio on cold start,
+    // the exact millisecond Sara or any visitor touches, scrolls, or taps ANYWHERE,
+    // the song starts playing instantly without needing any button or prompt!
+    const handleFirstGesture = () => {
+      attemptPlay();
+      cleanupGestureListeners();
     };
 
-    const cleanupListeners = () => {
-      window.removeEventListener('click', handleFirstUserInteraction, true);
-      window.removeEventListener('touchstart', handleFirstUserInteraction, true);
-      window.removeEventListener('pointerdown', handleFirstUserInteraction, true);
-      window.removeEventListener('scroll', handleFirstUserInteraction, true);
-      window.removeEventListener('keydown', handleFirstUserInteraction, true);
+    const cleanupGestureListeners = () => {
+      window.removeEventListener('pointerdown', handleFirstGesture, true);
+      window.removeEventListener('touchstart', handleFirstGesture, true);
+      window.removeEventListener('touchend', handleFirstGesture, true);
+      window.removeEventListener('mousedown', handleFirstGesture, true);
+      window.removeEventListener('scroll', handleFirstGesture, true);
+      window.removeEventListener('wheel', handleFirstGesture, true);
+      window.removeEventListener('keydown', handleFirstGesture, true);
+      window.removeEventListener('click', handleFirstGesture, true);
     };
 
-    window.addEventListener('click', handleFirstUserInteraction, true);
-    window.addEventListener('touchstart', handleFirstUserInteraction, true);
-    window.addEventListener('pointerdown', handleFirstUserInteraction, true);
-    window.addEventListener('scroll', handleFirstUserInteraction, { passive: true, capture: true });
-    window.addEventListener('keydown', handleFirstUserInteraction, true);
+    window.addEventListener('pointerdown', handleFirstGesture, { capture: true, passive: true });
+    window.addEventListener('touchstart', handleFirstGesture, { capture: true, passive: true });
+    window.addEventListener('touchend', handleFirstGesture, { capture: true, passive: true });
+    window.addEventListener('mousedown', handleFirstGesture, { capture: true, passive: true });
+    window.addEventListener('scroll', handleFirstGesture, { capture: true, passive: true });
+    window.addEventListener('wheel', handleFirstGesture, { capture: true, passive: true });
+    window.addEventListener('keydown', handleFirstGesture, { capture: true, passive: true });
+    window.addEventListener('click', handleFirstGesture, { capture: true, passive: true });
 
-    // Check after 2.5s if user hasn't interacted yet, show sweet floating prompt
-    const promptTimer = setTimeout(() => {
-      if (!hasUserInteracted) {
-        setShowAutoplayPrompt(true);
-      }
-    }, 2200);
-
-    // 5. Synchronize with romanticAudio subscription
+    // 3. Synchronize with romanticAudio subscription
     const handleSync = (state) => {
-      const trackId =
-        state.trackIndex === 1
-          ? 'until-i-found-you'
-          : state.trackIndex === 2
-          ? 'boyfriend-banale'
-          : 'tera-hone-laga-hoon';
-
-      const prev = playerStateRef.current;
-      playerStateRef.current = { isPlaying: state.isPlaying, trackId };
-
-      if (!iframeRef.current) return;
+      if (audioRef.current) {
+        audioRef.current.volume = state.isMuted
+          ? 0
+          : state.isDucked
+          ? 0.35
+          : (state.volume ?? 1);
+      }
 
       if (state.isPlaying) {
-        if (prev.trackId !== trackId) {
-          const newYtId = YT_TRACK_MAP[trackId] || '843x5r2iTig';
-          iframeRef.current.src = `https://www.youtube-nocookie.com/embed/${newYtId}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&disablekb=1&fs=0&loop=1&playlist=${newYtId}`;
-          setTimeout(playSong, 600);
+        // If a different track is selected (e.g. track 1 or 2), pause frontpage song
+        if (state.trackIndex !== 0) {
+          attemptPause();
         } else {
-          playSong();
+          attemptPlay();
         }
       } else {
-        pauseSong();
+        attemptPause();
       }
     };
 
     const unsubscribe = romanticAudio.subscribe(handleSync);
 
     return () => {
-      clearTimeout(initialPlayTimer);
-      clearTimeout(promptTimer);
-      cleanupListeners();
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      cleanupGestureListeners();
       unsubscribe();
     };
   }, []);
 
+  // If HTML5 audio errors out, switch seamlessly to the YouTube iframe stream
+  const handleAudioError = () => {
+    usingFallbackRef.current = true;
+    if (iframeRef.current) {
+      iframeRef.current.src = `https://www.youtube-nocookie.com/embed/${YT_FALLBACK_ID}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&disablekb=1&fs=0&loop=1&playlist=${YT_FALLBACK_ID}`;
+      setTimeout(() => {
+        sendIframeCommand('unMute');
+        sendIframeCommand('setVolume', [100]);
+        sendIframeCommand('playVideo');
+      }, 500);
+    }
+  };
+
   return (
     <>
-      {/* Hidden YouTube Audio Engine (Audio-only background bridge) */}
+      {/* High-fidelity HTML5 Audio Element for Tera Hone Laga Hoon */}
+      <audio
+        ref={audioRef}
+        id="bg-audio-tera-hone-laga-hoon"
+        preload="auto"
+        autoPlay
+        playsInline
+        loop
+        onError={handleAudioError}
+        style={{ display: 'none' }}
+      >
+        <source src="./assets/tera-hone-laga-hoon.m4a" type="audio/mp4" />
+        <source src="./assets/tera-hone-laga-hoon.webm" type="audio/webm" />
+        <source src="./assets/tera-hone-laga-hoon.mp3" type="audio/mpeg" />
+      </audio>
+
+      {/* Hidden YouTube Fallback Stream (Only activated if HTML5 audio fails) */}
       <div
         aria-hidden="true"
         style={{
@@ -143,35 +176,12 @@ export default function AudioBridge() {
       >
         <iframe
           ref={iframeRef}
-          title="Tera Hone Laga Hoon Player"
+          title="Backup Music Player"
           src="about:blank"
-          allow="autoplay; encrypted-media"
+          allow="autoplay *; encrypted-media *"
           tabIndex="-1"
-          onLoad={() => {
-            // Send play command as soon as iframe loads
-            playSong();
-          }}
         />
       </div>
-
-      {/* Floating prompt if browser blocked autoplay before user click */}
-      {showAutoplayPrompt && (
-        <div
-          className="floating-audio-unmute-prompt animate-pop-in"
-          onClick={() => {
-            handleFirstUserInteraction();
-          }}
-          role="button"
-          tabIndex={0}
-          title="Click to play Tera Hone Laga Hoon"
-        >
-          <div className="prompt-inner">
-            <Music size={15} className="spin-slow" color="#ffd700" />
-            <span>Tap to play <b>Tera Hone Laga Hoon</b> ♪</span>
-            <Sparkles size={14} color="#ff4d88" />
-          </div>
-        </div>
-      )}
     </>
   );
 }

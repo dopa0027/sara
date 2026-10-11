@@ -46,8 +46,10 @@ export const loveStoryConfig = {
       id: "tera-hone-laga-hoon",
       title: "Tera Hone Laga Hoon",
       artist: "Ajab Prem Ki Ghazab Kahani · Atif Aslam",
-      type: "synth-romantic", // Built-in melodic romantic audio engine
-      audioSrc: "./assets/our-song.mp3", // Optional local MP3 file if added
+      type: "audio-stream",
+      audioSrc: "./assets/tera-hone-laga-hoon.m4a",
+      audioSrcWebm: "./assets/tera-hone-laga-hoon.webm",
+      audioSrcMp3: "./assets/tera-hone-laga-hoon.mp3",
     },
     {
       id: "until-i-found-you",
