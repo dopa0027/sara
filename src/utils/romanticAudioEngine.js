@@ -76,9 +76,9 @@ export const AUDIO_TRACKS = {
 };
 
 export const LOVE_LETTER_PARTS = [
-  { id: 1, label: 'Part 1', file: 'miss-you-1.mp3' },
-  { id: 2, label: 'Part 2', file: 'miss-you-2.mp3' },
-  { id: 3, label: 'Part 3', file: 'miss-you-3.mp3' },
+  { id: 1, label: 'Part 1', file: 'miss-you-1.mp4', fallbacks: ['miss-you-1.m4a', 'miss-you-1.mp3'] },
+  { id: 2, label: 'Part 2', file: 'miss-you-2.mp4', fallbacks: ['miss-you-2.m4a', 'miss-you-2.mp3'] },
+  { id: 3, label: 'Part 3', file: 'miss-you-3.mp4', fallbacks: ['miss-you-3.m4a', 'miss-you-3.mp3'] },
 ];
 
 class GlobalAudioManager {
@@ -423,36 +423,56 @@ class GlobalAudioManager {
     const audio = this.getOrCreateVoiceAudio();
     if (!audio) return;
 
-    const resolvedUrl = getPublicAssetUrl(`assets/love-letters/${part.file}`);
-    audio.src = resolvedUrl;
-    audio.currentTime = 0;
-    audio.volume = this.volume;
+    const fileList = [
+      part.file,
+      ...(part.fallbacks || [`miss-you-${partIdx + 1}.m4a`, `miss-you-${partIdx + 1}.mp3`]),
+    ];
 
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          if (this.playbackToken === token) {
-            this.voiceState.isPlaying = true;
-            this.voiceState.autoplayBlocked = false;
-            this.voiceState.isMissingFile = false;
-            this.notify();
-          } else {
-            audio.pause();
-          }
-        })
-        .catch((err) => {
-          if (this.playbackToken === token) {
-            this.voiceState.isPlaying = false;
-            if (err.name === 'NotAllowedError') {
-              this.voiceState.autoplayBlocked = true;
+    const tryPlayIndex = (idx) => {
+      if (idx >= fileList.length) {
+        if (this.playbackToken === token) {
+          this.voiceState.isPlaying = false;
+          this.voiceState.isMissingFile = true;
+          this.notify();
+        }
+        return;
+      }
+
+      const currentFile = fileList[idx];
+      const resolvedUrl = getPublicAssetUrl(`assets/love-letters/${currentFile}`);
+      audio.src = resolvedUrl;
+      audio.currentTime = 0;
+      audio.volume = this.volume;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            if (this.playbackToken === token) {
+              this.voiceState.isPlaying = true;
+              this.voiceState.autoplayBlocked = false;
+              this.voiceState.isMissingFile = false;
+              this.notify();
             } else {
-              this.voiceState.isMissingFile = true;
+              audio.pause();
             }
-            this.notify();
-          }
-        });
-    }
+          })
+          .catch((err) => {
+            if (this.playbackToken === token) {
+              if (err.name === 'NotAllowedError') {
+                this.voiceState.isPlaying = false;
+                this.voiceState.autoplayBlocked = true;
+                this.notify();
+              } else {
+                // Try next fallback (.m4a, .mp3)
+                tryPlayIndex(idx + 1);
+              }
+            }
+          });
+      }
+    };
+
+    tryPlayIndex(0);
   }
 
   handleVoiceEnded() {

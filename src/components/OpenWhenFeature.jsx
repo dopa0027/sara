@@ -22,15 +22,15 @@ import { romanticAudio } from '../utils/romanticAudioEngine';
 // AUDIO CONFIGURATION FOR SEQUENTIAL LOVE LETTER RECORDINGS
 // =========================================================================
 const LOVE_LETTER_AUDIO_PATHS = {
-  missYouPart1: 'miss-you-1.mp3',
-  missYouPart2: 'miss-you-2.mp3',
-  missYouPart3: 'miss-you-3.mp3',
+  missYouPart1: 'miss-you-1.mp4',
+  missYouPart2: 'miss-you-2.mp4',
+  missYouPart3: 'miss-you-3.mp4',
 };
 
 const VOICE_NOTE_PARTS = [
-  { id: 1, label: 'Part 1', file: LOVE_LETTER_AUDIO_PATHS.missYouPart1 },
-  { id: 2, label: 'Part 2', file: LOVE_LETTER_AUDIO_PATHS.missYouPart2 },
-  { id: 3, label: 'Part 3', file: LOVE_LETTER_AUDIO_PATHS.missYouPart3 },
+  { id: 1, label: 'Part 1', file: LOVE_LETTER_AUDIO_PATHS.missYouPart1, fallbacks: ['miss-you-1.m4a', 'miss-you-1.mp3'] },
+  { id: 2, label: 'Part 2', file: LOVE_LETTER_AUDIO_PATHS.missYouPart2, fallbacks: ['miss-you-2.m4a', 'miss-you-2.mp3'] },
+  { id: 3, label: 'Part 3', file: LOVE_LETTER_AUDIO_PATHS.missYouPart3, fallbacks: ['miss-you-3.m4a', 'miss-you-3.mp3'] },
 ];
 
 // =========================================================================
