@@ -30,6 +30,16 @@ export const loveStoryConfig = {
     audioSrc: "./assets/dil-meri-na-sune.mp3",
   },
 
+  // Relationship Quiz Final Result Song: "Gehra Samandar" (Naina Da Kya Kasoor)
+  quizSong: {
+    id: "gehra-samandar",
+    title: "Gehra Samandar (Naina Da Kya Kasoor)",
+    artist: "Amit Trivedi · Andhadhun",
+    lyricsHook: "Gehra samandar, dil dooba ismein, ghayal hua main us pal se...",
+    youtubeId: "R2_241d7a8E",
+    audioSrc: "./assets/gehra-samandar.mp3",
+  },
+
   // Songs
   playlist: [
     {

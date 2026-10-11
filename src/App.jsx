@@ -17,6 +17,7 @@ import Level6FavouritePerson from './components/Level6FavouritePerson';
 import Level7FinalPromise from './components/Level7FinalPromise';
 import FinalSurpriseLetter from './components/FinalSurpriseLetter';
 import PehliNazarExperience from './components/PehliNazarExperience';
+import RelationshipQuiz from './components/RelationshipQuiz';
 
 export default function App() {
   const [stage, setStage] = useState(0); // 0 = Front Page (Hero), 1..8 = Challenges, 9 = Final Surprise & Gallery
@@ -33,6 +34,8 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (view === 'pehli-nazar') {
       setStage('pehli-nazar');
+    } else if (view === 'quiz' || view === 'know-me') {
+      setStage('relationship-quiz');
     } else if (view === 'shayari') {
       setStage(0);
       setTimeout(() => {
@@ -88,6 +91,7 @@ export default function App() {
               onOpenSurprise={() => setStage(1)}
               onOpenNote={() => setIsNoteOpen(true)}
               onOpenPehliNazar={() => setStage('pehli-nazar')}
+              onOpenQuiz={() => setStage('relationship-quiz')}
             />
             <ShayariSection />
           </>
@@ -96,6 +100,11 @@ export default function App() {
         {/* Pehli Nazar, Pehla Ehsaas Interactive Experience */}
         {stage === 'pehli-nazar' && (
           <PehliNazarExperience onBackToHome={() => setStage(0)} />
+        )}
+
+        {/* 10-Question Relationship Quiz: "How Well Do You Know Me, Baby? ❤️" */}
+        {stage === 'relationship-quiz' && (
+          <RelationshipQuiz onBackToHome={() => setStage(0)} />
         )}
 
         {/* 7 Challenges & Special Ganga Ghat Memory */}
