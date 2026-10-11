@@ -143,9 +143,8 @@ Tumhara Sudhanshu 💌`,
 
 export default function OpenWhenFeature({ onBackToHome }) {
   // Screen Stage: 'intro' | 'password' | 'envelopes' | 'letter'
-  const [screenStage, setScreenStage] = useState(() => {
-    return sessionStorage.getItem('ow_unlocked') === 'true' ? 'envelopes' : 'intro';
-  });
+  // Always starts at 'intro' so Sara must unlock with password "saranshu"
+  const [screenStage, setScreenStage] = useState('intro');
 
   // Selected letter object
   const [activeLetter, setActiveLetter] = useState(null);
@@ -223,6 +222,7 @@ export default function OpenWhenFeature({ onBackToHome }) {
   // INITIALIZATION & COOLDOWN MANAGEMENT
   // =========================================================================
   useEffect(() => {
+    sessionStorage.removeItem('ow_unlocked');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     checkAndManageCooldown();
 
@@ -252,7 +252,6 @@ export default function OpenWhenFeature({ onBackToHome }) {
       // Clear attempts
       sessionStorage.removeItem('ow_failed_attempts');
       sessionStorage.removeItem('ow_lockout_expiry');
-      sessionStorage.setItem('ow_unlocked', 'true');
 
       // Animate lock opening and transition to envelopes after celebration
       setTimeout(() => {
