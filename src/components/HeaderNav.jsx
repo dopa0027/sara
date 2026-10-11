@@ -26,6 +26,7 @@ export default function HeaderNav({ onOpenNote, onNavigate }) {
       <nav className="nav-links">
         <button type="button" className="nav-link" onClick={() => onNavigate('home')}>Home</button>
         <button type="button" className="nav-link highlight-link" onClick={onOpenNote}>Message</button>
+        <button type="button" className="nav-link special-pn-link" onClick={() => onNavigate('pehli-nazar')}>Pehli Nazar ❤️</button>
         <button type="button" className="nav-link" onClick={() => onNavigate('shayari')}>Shayari</button>
         <button type="button" className="nav-link" onClick={() => onNavigate('photos')}>Our Photos</button>
         <button type="button" className="nav-link" onClick={() => onNavigate('surprise')}>Surprise</button>

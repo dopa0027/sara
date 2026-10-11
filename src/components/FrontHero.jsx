@@ -3,7 +3,7 @@ import { Heart, Play } from 'lucide-react';
 import { loveStoryConfig } from '../config/loveStoryConfig';
 import { romanticAudio } from '../utils/romanticAudioEngine';
 
-export default function FrontHero({ onOpenSurprise, onOpenNote }) {
+export default function FrontHero({ onOpenSurprise, onOpenNote, onOpenPehliNazar }) {
   const handlePlaySong = () => {
     romanticAudio.play(0, loveStoryConfig.playlist[0]);
   };
@@ -43,6 +43,15 @@ export default function FrontHero({ onOpenSurprise, onOpenNote }) {
             >
               <span>♡ Open Your Surprise</span>
               <span className="btn-arrow">›</span>
+            </button>
+
+            <button
+              type="button"
+              className="hero-btn-pehli-nazar"
+              onClick={onOpenPehliNazar}
+            >
+              <Heart size={15} fill="#ffd700" color="#ffd700" />
+              <span>Pehli Nazar, Pehla Ehsaas ❤️</span>
             </button>
 
             <button

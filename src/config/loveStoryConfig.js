@@ -18,6 +18,16 @@ export const loveStoryConfig = {
     traditional: "./assets/sara-traditional.jpg", // Sara festive in silver-black
     gangaGhat: "./assets/birthday-terrace.webp", // Scenic terrace / ghat backdrop
     coupleOriginal: "./assets/us.jpeg", // Original photo
+    brownBlazer: "./assets/sara-brown-blazer.jpg", // Sara's first photo in brown blazer
+  },
+
+  // Pehli Nazar, Pehla Ehsaas Song
+  pehliNazarSong: {
+    id: "dil-meri-na-sune",
+    title: "Dil Meri Na Sune",
+    artist: "Atif Aslam · Genius",
+    youtubeId: "YZLKoG_vhDY",
+    audioSrc: "./assets/dil-meri-na-sune.mp3",
   },
 
   // Songs

@@ -16,6 +16,7 @@ import Level5SendLove from './components/Level5SendLove';
 import Level6FavouritePerson from './components/Level6FavouritePerson';
 import Level7FinalPromise from './components/Level7FinalPromise';
 import FinalSurpriseLetter from './components/FinalSurpriseLetter';
+import PehliNazarExperience from './components/PehliNazarExperience';
 
 export default function App() {
   const [stage, setStage] = useState(0); // 0 = Front Page (Hero), 1..8 = Challenges, 9 = Final Surprise & Gallery
@@ -30,6 +31,8 @@ export default function App() {
     if (view === 'home') {
       setStage(0);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (view === 'pehli-nazar') {
+      setStage('pehli-nazar');
     } else if (view === 'shayari') {
       setStage(0);
       setTimeout(() => {
@@ -84,9 +87,15 @@ export default function App() {
             <FrontHero
               onOpenSurprise={() => setStage(1)}
               onOpenNote={() => setIsNoteOpen(true)}
+              onOpenPehliNazar={() => setStage('pehli-nazar')}
             />
             <ShayariSection />
           </>
+        )}
+
+        {/* Pehli Nazar, Pehla Ehsaas Interactive Experience */}
+        {stage === 'pehli-nazar' && (
+          <PehliNazarExperience onBackToHome={() => setStage(0)} />
         )}
 
         {/* 7 Challenges & Special Ganga Ghat Memory */}
