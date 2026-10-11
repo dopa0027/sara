@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Sparkles, Play, Pause, RotateCcw, ArrowRight, ArrowLeft, Music } from 'lucide-react';
+import { Heart, Play, Pause, RotateCcw, ArrowRight, ArrowLeft, Music } from 'lucide-react';
 import { loveStoryConfig } from '../config/loveStoryConfig';
 import { romanticAudio } from '../utils/romanticAudioEngine';
 

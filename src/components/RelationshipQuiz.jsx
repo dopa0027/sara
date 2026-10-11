@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Sparkles, Trophy, Play, Pause, RotateCcw, ArrowRight, ArrowLeft, Volume2, Music, CheckCircle2, Star } from 'lucide-react';
+import { Heart, Sparkles, Trophy, Play, Pause, RotateCcw, ArrowRight, ArrowLeft, Volume2, Music, CheckCircle2 } from 'lucide-react';
 import { loveStoryConfig } from '../config/loveStoryConfig';
-import { romanticAudio } from '../utils/romanticAudioEngine';
+import { romanticAudio, getPublicAssetUrl } from '../utils/romanticAudioEngine';
 
 // =========================================================================
 // THE 10 QUESTIONS DATA
@@ -471,8 +471,8 @@ export default function RelationshipQuiz({ onBackToHome }) {
           }}
           onPause={() => setSongPlaying(false)}
         >
-          <source src="./assets/gehra-samandar.m4a" type="audio/mp4" />
-          <source src="./assets/gehra-samandar.mp3" type="audio/mpeg" />
+          <source src={getPublicAssetUrl('assets/gehra-samandar.m4a')} type="audio/mp4" />
+          <source src={getPublicAssetUrl('assets/gehra-samandar.mp3')} type="audio/mpeg" />
         </audio>
       </div>
 

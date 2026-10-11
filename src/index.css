@@ -2985,4 +2985,763 @@ body {
   }
 }
 
+/* ========================================================================= */
+/* OPEN WHEN… 💌 ROMANTIC LOVE LETTERS FEATURE                                */
+/* ========================================================================= */
+
+/* Nav & Hero Buttons */
+.special-ow-link {
+  background: linear-gradient(115deg, rgba(255, 51, 119, 0.22), rgba(255, 215, 0, 0.22)) !important;
+  border: 1px solid rgba(255, 215, 0, 0.55) !important;
+  color: #ffd700 !important;
+  font-weight: 600 !important;
+}
+
+.special-ow-link:hover {
+  background: linear-gradient(115deg, rgba(255, 51, 119, 0.4), rgba(255, 215, 0, 0.4)) !important;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.45);
+}
+
+.hero-btn-open-when {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(120deg, rgba(92, 22, 60, 0.85), rgba(58, 12, 38, 0.95));
+  border: 1px solid rgba(255, 215, 0, 0.55);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 22px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 51, 119, 0.25);
+}
+
+.hero-btn-open-when:hover {
+  transform: translateY(-2px);
+  border-color: #ffd700;
+  box-shadow: 0 6px 24px rgba(255, 51, 119, 0.5), 0 0 15px rgba(255, 215, 0, 0.35);
+}
+
+/* Container & Topbar */
+.open-when-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+  position: relative;
+  z-index: 10;
+}
+
+.open-when-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding: 0 4px;
+}
+
+/* Common Card Base */
+.open-when-card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(46, 12, 34, 0.95), rgba(26, 7, 20, 0.97));
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 26px;
+  padding: 42px 30px;
+  text-align: center;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.65), 0 0 30px rgba(255, 51, 119, 0.2);
+  backdrop-filter: blur(12px);
+  max-width: 660px;
+  margin: 0 auto;
+}
+
+/* 1. Intro Screen & Lockbox */
+.lockbox-visual-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lockbox-glowing-aura {
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 31, 102, 0.45) 0%, rgba(255, 215, 0, 0.2) 50%, transparent 70%);
+  filter: blur(12px);
+  animation: pulseGlowBtn 3s infinite alternate;
+}
+
+.lockbox-heart-shape {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lockbox-keyhole {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(46, 12, 34, 0.95);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ffd700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+
+.lockbox-sparkles {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+}
+
+.open-when-heading {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  color: #fff;
+  margin: 0 0 16px;
+  text-shadow: 0 2px 14px rgba(255, 51, 119, 0.5);
+}
+
+.open-when-desc {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--muted-rose);
+  max-width: 520px;
+  margin: 0 auto 32px;
+}
+
+.open-when-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* 2. Password Lock Screen */
+.password-lock-icon-box {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(255, 51, 119, 0.25), rgba(46, 12, 34, 0.8));
+  border: 2px solid rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 24px rgba(255, 51, 119, 0.35);
+  transition: transform 0.4s, border-color 0.4s;
+}
+
+.password-lock-icon-box.unlock-celebrate {
+  border-color: #ffd700;
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.7);
+  transform: scale(1.15) rotate(5deg);
+}
+
+.password-prompt-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: #fff;
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.password-hint-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px dashed rgba(255, 215, 0, 0.45);
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 13.5px;
+  color: #ffd700;
+  margin-bottom: 26px;
+}
+
+.password-form-box {
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.password-secret-input {
+  width: 100%;
+  padding: 14px 48px 14px 20px;
+  background: rgba(20, 5, 16, 0.85);
+  border: 1.5px solid rgba(255, 215, 0, 0.4);
+  border-radius: 30px;
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+  letter-spacing: 0.5px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.password-secret-input:focus {
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.password-secret-input.input-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-color: rgba(255, 77, 106, 0.4);
+}
+
+.password-toggle-eye {
+  position: absolute;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--muted-rose);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.password-toggle-eye:hover {
+  color: #ffd700;
+}
+
+.cooldown-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 59, 92, 0.2);
+  border: 1px solid rgba(255, 77, 106, 0.6);
+  border-radius: 20px;
+  padding: 10px 18px;
+  color: #ff94a8;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
+.cooldown-alert-banner b {
+  color: #ffd700;
+  font-size: 15px;
+}
+
+.attempts-counter-meta {
+  font-size: 13px;
+  color: var(--muted-rose);
+  margin-bottom: 16px;
+}
+
+.attempts-warning {
+  color: #ff8da1;
+  font-weight: 600;
+}
+
+.password-feedback-box {
+  border-radius: 18px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.password-feedback-box.fb-error {
+  background: rgba(255, 77, 106, 0.15);
+  border: 1px solid rgba(255, 77, 106, 0.45);
+  color: #ffb3c1;
+  font-size: 14px;
+}
+
+.password-feedback-box.fb-success {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.6);
+  color: #ffd700;
+  font-size: 15px;
+  white-space: pre-line;
+}
+
+.unlock-submit-btn {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 15.5px;
+  justify-content: center;
+}
+
+.password-gentle-disclaimer {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13.5px;
+  color: rgba(255, 215, 0, 0.5);
+  margin: 22px 0 0;
+}
+
+/* 3. Envelopes Grid View */
+.open-when-envelopes-wrapper {
+  max-width: 940px;
+  margin: 0 auto;
+}
+
+.envelopes-header-meta {
+  text-align: center;
+  margin-bottom: 34px;
+}
+
+.envelopes-grid-title {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  color: #fff;
+  margin: 0 0 10px;
+  text-shadow: 0 2px 12px rgba(255, 51, 119, 0.4);
+}
+
+.envelopes-grid-sub {
+  font-size: 15px;
+  color: var(--muted-rose);
+  margin: 0;
+}
+
+.envelopes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 22px;
+}
+
+.envelope-card-item {
+  background: linear-gradient(145deg, rgba(46, 12, 34, 0.9), rgba(28, 7, 21, 0.95));
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  border-radius: 22px;
+  padding: 26px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.envelope-card-item:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(255, 215, 0, 0.85);
+  box-shadow: 0 16px 40px rgba(255, 51, 119, 0.4), 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+/* 3D Envelope Graphic */
+.envelope-graphic-box {
+  width: 90px;
+  height: 65px;
+  background: linear-gradient(135deg, #6b143c, #8a1a4d);
+  border: 1px solid rgba(255, 215, 0, 0.6);
+  border-radius: 8px;
+  position: relative;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.envelope-card-item:hover .envelope-graphic-box {
+  transform: scale(1.08);
+}
+
+.envelope-flap-gold {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 51, 119, 0.2));
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  border-top: 1px solid rgba(255, 215, 0, 0.7);
+}
+
+.envelope-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(30, 8, 22, 0.95);
+  border: 1px solid rgba(255, 215, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.envelope-stamp {
+  position: absolute;
+  bottom: 5px;
+  right: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffd700;
+  border: 1px dashed rgba(255, 215, 0, 0.6);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.envelope-info {
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.envelope-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: #fff;
+  margin: 0 0 8px;
+  line-height: 1.35;
+}
+
+.envelope-tagline {
+  font-size: 13px;
+  color: var(--muted-rose);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.envelope-tap-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 51, 119, 0.18);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+
+.envelope-card-item:hover .envelope-tap-badge {
+  background: rgba(255, 51, 119, 0.4);
+  border-color: #ffd700;
+}
+
+/* 4. Letter View Screen */
+.open-when-letter-view-wrap {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.letter-nav-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.return-envelopes-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
+/* Voice Recordings Player Card (Letter 1) */
+.voice-recordings-player-card {
+  background: linear-gradient(135deg, rgba(62, 14, 44, 0.95), rgba(38, 8, 28, 0.98));
+  border: 1.5px solid rgba(255, 215, 0, 0.55);
+  border-radius: 22px;
+  padding: 18px 22px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 51, 119, 0.35);
+}
+
+.voice-player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.voice-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.voice-header-caption {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffd700;
+}
+
+.voice-parts-chips {
+  display: flex;
+  gap: 6px;
+}
+
+.voice-part-chip {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--muted-rose);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voice-part-chip:hover {
+  background: rgba(255, 51, 119, 0.35);
+  color: #fff;
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.voice-part-chip.chip-active {
+  background: #ff3377;
+  color: #fff;
+  border-color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 51, 119, 0.6);
+}
+
+.voice-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.voice-play-toggle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff3377, #ff6b98);
+  border: 1.5px solid #ffd700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(255, 51, 119, 0.7);
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+
+.voice-play-toggle-btn:hover {
+  transform: scale(1.1);
+}
+
+.voice-status-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.voice-track-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voice-sub-desc {
+  font-size: 12px;
+  color: var(--muted-rose);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voice-autoplay-fallback-row {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.play-voice-prompt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(115deg, #ff3377, #ff6b98);
+  border: 1.5px solid #ffd700;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 10px 22px;
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(255, 51, 119, 0.6);
+  transition: transform 0.2s;
+}
+
+.play-voice-prompt-btn:hover {
+  transform: scale(1.04);
+}
+
+/* The Paper-Styled Letter Card */
+.parchment-letter-card {
+  position: relative;
+  background: linear-gradient(135deg, #fffdf8 0%, #faf3e8 100%);
+  border: 2px solid rgba(255, 215, 0, 0.7);
+  border-radius: 18px;
+  padding: 46px 36px 42px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.75), inset 0 0 35px rgba(230, 208, 175, 0.4);
+  color: #2b0e24;
+  margin-bottom: 26px;
+}
+
+.parchment-top-seal {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+.wax-seal-circle {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #a81c4e, #6e0f31);
+  border: 2px solid #ffd700;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.parchment-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.parchment-pre-date {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: #8c426b;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.parchment-letter-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  color: #4a1134;
+  margin: 0 0 14px;
+  line-height: 1.35;
+}
+
+.parchment-divider-gold {
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+  margin: 0 auto;
+}
+
+.parchment-letter-body {
+  font-size: 16.5px;
+  line-height: 1.85;
+  color: #2b0e24;
+  margin-bottom: 30px;
+  letter-spacing: 0.2px;
+}
+
+.parchment-paragraph {
+  margin: 0 0 16px;
+  white-space: pre-line;
+}
+
+.parchment-footer {
+  text-align: right;
+  border-top: 1px dashed rgba(168, 28, 78, 0.35);
+  padding-top: 20px;
+}
+
+.parchment-sign-love {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: #7a2253;
+  margin: 0 0 4px;
+}
+
+.parchment-sign-name {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: #4a1134;
+  margin: 0;
+}
+
+.letter-bottom-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Mobile Responsiveness for Open When Feature */
+@media (max-width: 640px) {
+  .open-when-container {
+    padding: 16px 10px 60px;
+  }
+  .open-when-card {
+    padding: 30px 18px;
+    border-radius: 20px;
+  }
+  .open-when-heading {
+    font-size: 26px;
+  }
+  .open-when-desc {
+    font-size: 14.5px;
+  }
+  .password-prompt-title {
+    font-size: 20px;
+  }
+  .envelopes-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .parchment-letter-card {
+    padding: 36px 18px 30px;
+  }
+  .parchment-letter-title {
+    font-size: 22px;
+  }
+  .parchment-letter-body {
+    font-size: 15px;
+    line-height: 1.75;
+  }
+  .voice-recordings-player-card {
+    padding: 14px 14px;
+  }
+  .voice-player-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
 

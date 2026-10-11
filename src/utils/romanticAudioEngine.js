@@ -1,231 +1,292 @@
 // =========================================================================
-// ROMANTIC AUDIO ENGINE
-// Seamlessly plays audio files OR falls back to a gorgeous synthesized
-// romantic piano / music-box melody via Web Audio API. Zero dependencies!
+// UNIFIED MASTER ROMANTIC AUDIO ENGINE
+// Strictly manages a SINGLE audio pipeline so two songs can NEVER mix!
 // =========================================================================
+
+// Generates robust asset paths respecting Vite base path (e.g. /sara/ on GitHub Pages)
+export const getPublicAssetUrl = (assetPath) => {
+  if (!assetPath) return '';
+  const cleanPath = assetPath.replace(/^\.?\//, '');
+  const baseUrl = import.meta.env.BASE_URL;
+
+  if (typeof window !== 'undefined') {
+    if (baseUrl && baseUrl.startsWith('/')) {
+      const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      return `${window.location.origin}${cleanBase}${cleanPath}`;
+    }
+
+    const pathname = window.location.pathname;
+    let resolvedBase = pathname.endsWith('/')
+      ? pathname
+      : pathname.slice(0, pathname.lastIndexOf('/') + 1);
+
+    if (!pathname.endsWith('/') && !pathname.includes('.')) {
+      resolvedBase = `${pathname}/`;
+    }
+
+    return `${window.location.origin}${resolvedBase}${cleanPath}`;
+  }
+
+  return `./${cleanPath}`;
+};
+
+export const AUDIO_TRACKS = {
+  'tera-hone-laga-hoon': {
+    id: 'tera-hone-laga-hoon',
+    title: 'Tera Hone Laga Hoon',
+    artist: 'Ajab Prem Ki Ghazab Kahani · Atif Aslam',
+    src: './assets/tera-hone-laga-hoon.m4a',
+    fallbackSrc: './assets/tera-hone-laga-hoon.mp3',
+  },
+  'gehra-samandar': {
+    id: 'gehra-samandar',
+    title: 'Gehra Samandar',
+    artist: 'Naina Da Kya Kasoor · Amit Trivedi',
+    src: './assets/gehra-samandar.m4a',
+    fallbackSrc: './assets/gehra-samandar.mp3',
+  },
+};
 
 class RomanticAudioEngine {
   constructor() {
-    this.audioContext = null;
     this.audioElement = null;
+    this.currentTrackId = 'tera-hone-laga-hoon';
     this.isPlaying = false;
     this.isMuted = false;
-    this.currentTrackIndex = 0;
-    this.gainNode = null;
-    this.synthLoopInterval = null;
-    this.listeners = new Set();
-    this.noteStep = 0;
-
-    // Romantic chord progressions & melodies
-    // Chords in frequencies (Hz) for "Tera Hone Laga Hoon" & "Until I Found You" vibes
-    this.themes = {
-      // Gentle romantic ballad arpeggios
-      romantic: [
-        // Eb Major chord: Eb4, G4, Bb4, Eb5
-        [311.13, 392.00, 466.16, 622.25],
-        [311.13, 466.16, 392.00, 466.16],
-        // Bb Major: Bb3, D4, F4, Bb4
-        [233.08, 293.66, 349.23, 466.16],
-        [293.66, 349.23, 466.16, 349.23],
-        // C minor: C4, Eb4, G4, C5
-        [261.63, 311.13, 392.00, 523.25],
-        [311.13, 392.00, 523.25, 392.00],
-        // Ab Major: Ab3, C4, Eb4, Ab4
-        [207.65, 261.63, 311.13, 415.30],
-        [261.63, 311.13, 415.30, 523.25],
-      ],
-      // Soft music-box melody notes
-      melody: [
-        392.00, 466.16, 523.25, 622.25, 523.25, 466.16, 392.00, 349.23,
-        392.00, 466.16, 523.25, 587.33, 523.25, 466.16, 392.00, 466.16
-      ]
-    };
     this.volume = 1;
     this.isDucked = false;
+    this.userPaused = false; // Tracks if the user intentionally paused the music
+    this.listeners = new Set();
+    this.gestureListenersAttached = false;
+    this._onGesture = null;
   }
 
+  // Subscribe to changes (notifies immediately with current state)
   subscribe(listener) {
     this.listeners.add(listener);
+    try {
+      listener(this.getState());
+    } catch {
+      // Safe fallback
+    }
     return () => this.listeners.delete(listener);
   }
 
+  getState() {
+    const trackInfo = AUDIO_TRACKS[this.currentTrackId] || AUDIO_TRACKS['tera-hone-laga-hoon'];
+    return {
+      isPlaying: this.isPlaying,
+      isMuted: this.isMuted,
+      userPaused: this.userPaused,
+      currentTrackId: this.currentTrackId,
+      trackInfo,
+      trackIndex: this.currentTrackId === 'gehra-samandar' ? 10 : 0,
+      volume: this.volume,
+      isDucked: this.isDucked,
+    };
+  }
+
   notify() {
-    this.listeners.forEach((fn) =>
-      fn({
-        isPlaying: this.isPlaying,
-        isMuted: this.isMuted,
-        trackIndex: this.currentTrackIndex,
-        volume: this.volume,
-        isDucked: this.isDucked,
-      })
-    );
-  }
-
-  initAudioContext() {
-    if (!this.audioContext) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) {
-        this.audioContext = new AudioCtx();
-        this.gainNode = this.audioContext.createGain();
-        this.gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-        this.gainNode.connect(this.audioContext.destination);
+    const state = this.getState();
+    this.listeners.forEach((fn) => {
+      try {
+        fn(state);
+      } catch {
+        // Safe fallback
       }
-    }
-    if (this.audioContext && this.audioContext.state === "suspended") {
-      this.audioContext.resume();
-    }
+    });
   }
 
-  playPianoNote(freq, time, duration = 1.2, isMelody = false) {
-    if (!this.audioContext || this.isMuted) return;
+  getOrCreateAudio() {
+    if (!this.audioElement && typeof window !== 'undefined') {
+      this.audioElement = new Audio();
+      this.audioElement.preload = 'auto';
+      this.audioElement.loop = true;
+      this.audioElement.playsInline = true;
+
+      this.audioElement.onplay = () => {
+        this.isPlaying = true;
+        this.notify();
+      };
+
+      this.audioElement.onpause = () => {
+        this.isPlaying = false;
+        this.notify();
+      };
+
+      this.audioElement.onerror = () => {
+        // Fallback to mp3 if m4a has an issue
+        const track = AUDIO_TRACKS[this.currentTrackId];
+        if (track && track.fallbackSrc) {
+          const fallbackResolved = getPublicAssetUrl(track.fallbackSrc);
+          if (this.audioElement && this.audioElement.src !== fallbackResolved) {
+            this.audioElement.src = fallbackResolved;
+            if (this.isPlaying && !this.userPaused) {
+              this.audioElement.play().catch(() => {});
+            }
+          }
+        }
+      };
+    }
+    return this.audioElement;
+  }
+
+  // Main method to switch and play a track
+  async playTrack(trackId = 'tera-hone-laga-hoon') {
+    const audio = this.getOrCreateAudio();
+    if (!audio) return;
+
+    const track = AUDIO_TRACKS[trackId] || AUDIO_TRACKS['tera-hone-laga-hoon'];
+    const resolvedSrc = getPublicAssetUrl(track.src);
+
+    // If switching track: ALWAYS PAUSE AND STOP PREVIOUS TRACK FIRST!
+    const isDifferentTrack = this.currentTrackId !== trackId || audio.src !== resolvedSrc;
+
+    if (isDifferentTrack) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = resolvedSrc;
+      this.currentTrackId = trackId;
+    }
+
+    audio.volume = this.isMuted ? 0 : this.isDucked ? 0.35 : this.volume;
 
     try {
-      const osc = this.audioContext.createOscillator();
-      const oscHarmonic = this.audioContext.createOscillator();
-      const noteGain = this.audioContext.createGain();
-
-      // Warm triangle & sine wave mixture for soft electric piano / bell timbre
-      osc.type = isMelody ? "sine" : "triangle";
-      osc.frequency.setValueAtTime(freq, time);
-
-      oscHarmonic.type = "sine";
-      oscHarmonic.frequency.setValueAtTime(freq * 2, time);
-
-      // Acoustic envelope: quick attack, gentle exponential decay
-      const peakGain = isMelody ? 0.08 : 0.04;
-      noteGain.gain.setValueAtTime(0.0001, time);
-      noteGain.gain.linearRampToValueAtTime(peakGain, time + 0.02);
-      noteGain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-      osc.connect(noteGain);
-      oscHarmonic.connect(noteGain);
-      noteGain.connect(this.gainNode);
-
-      osc.start(time);
-      osc.stop(time + duration);
-      oscHarmonic.start(time);
-      oscHarmonic.stop(time + duration);
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        await playPromise;
+        this.isPlaying = true;
+        this.notify();
+      }
     } catch {
-      // Audio node cleanup handling
+      // Browser autoplay policy might block unmuted audio on cold start
+      this.isPlaying = false;
+      this.notify();
+      this.attachGestureListeners();
     }
   }
 
-  startSynthMusic() {
-    this.stopSynthMusic();
-    this.initAudioContext();
-    if (!this.audioContext) return;
-
-    let beat = 0;
-    const tempoMs = 520; // gentle slow romantic tempo
-
-    const tick = () => {
-      if (!this.isPlaying) return;
-      const now = this.audioContext.currentTime + 0.05;
-
-      // Play chord arpeggio
-      const chordIndex = Math.floor(beat / 4) % this.themes.romantic.length;
-      const chord = this.themes.romantic[chordIndex];
-      const noteInChord = chord[beat % chord.length];
-
-      this.playPianoNote(noteInChord, now, 1.4, false);
-
-      // Play melody accent every 2 beats
-      if (beat % 2 === 0) {
-        const melodyNote = this.themes.melody[(beat / 2) % this.themes.melody.length];
-        this.playPianoNote(melodyNote, now + 0.05, 1.8, true);
-      }
-
-      beat++;
-    };
-
-    // Start immediate first note and loop
-    tick();
-    this.synthLoopInterval = setInterval(tick, tempoMs);
+  // Backwards compatibility for play(trackIndex, trackConfig)
+  play(trackIndexOrId = 0) {
+    if (this.userPaused) return; // Do not restart if user paused!
+    if (trackIndexOrId === 'gehra-samandar') {
+      return this.playTrack('gehra-samandar');
+    }
+    return this.playTrack('tera-hone-laga-hoon');
   }
 
-  stopSynthMusic() {
-    if (this.synthLoopInterval) {
-      clearInterval(this.synthLoopInterval);
-      this.synthLoopInterval = null;
+  replayTrack(trackId = null) {
+    const targetId = trackId || this.currentTrackId;
+    const audio = this.getOrCreateAudio();
+    if (!audio) return;
+
+    this.userPaused = false;
+    if (targetId !== this.currentTrackId) {
+      this.playTrack(targetId);
+      return;
     }
-  }
 
-  async play(trackIndex = null, trackConfig = null) {
-    if (trackIndex !== null) {
-      this.currentTrackIndex = trackIndex;
-    }
-
-    this.initAudioContext();
-    this.isPlaying = true;
-
-    // Check if an MP3 file was provided and can play
-    const audioSrc = trackConfig?.audioSrc;
-    if (audioSrc) {
-      try {
-        if (!this.audioElement) {
-          this.audioElement = new Audio();
-          this.audioElement.loop = true;
-          this.audioElement.onended = () => this.nextTrack();
-        }
-
-        if (this.audioElement.src !== audioSrc) {
-          this.audioElement.src = audioSrc;
-        }
-
-        const playPromise = this.audioElement.play();
-        if (playPromise !== undefined) {
-          await playPromise;
-          this.stopSynthMusic();
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          this.isPlaying = true;
           this.notify();
-          return;
-        }
-      } catch {
-        // Handled by AudioBridge streaming engine
-      }
+        })
+        .catch(() => {});
     }
-
-    this.notify();
   }
 
+  // Temporary pause (e.g. for sub-features like voice notes or quiz)
   pause() {
-    this.isPlaying = false;
     if (this.audioElement) {
       this.audioElement.pause();
     }
-    this.stopSynthMusic();
+    this.isPlaying = false;
+    this.notify();
+  }
+
+  // User explicitly paused background music
+  userPause() {
+    this.userPaused = true;
+    this.pause();
+  }
+
+  // User explicitly resumed background music
+  userResume() {
+    this.userPaused = false;
+    return this.playTrack(this.currentTrackId);
+  }
+
+  // User clicked toggle pill
+  userToggle() {
+    if (this.isPlaying) {
+      this.userPause();
+    } else {
+      this.userResume();
+    }
+  }
+
+  stopAll() {
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement.currentTime = 0;
+    }
+    this.isPlaying = false;
     this.notify();
   }
 
   toggle() {
-    if (this.isPlaying) {
-      this.pause();
-    } else {
-      this.play();
-    }
+    this.userToggle();
   }
 
   setVolume(val) {
     this.volume = val;
-    if (this.gainNode && this.audioContext) {
-      this.gainNode.gain.setValueAtTime(val * 0.2, this.audioContext.currentTime);
-    }
     if (this.audioElement) {
-      this.audioElement.volume = val;
+      this.audioElement.volume = this.isMuted ? 0 : this.isDucked ? 0.35 : val;
     }
     this.notify();
   }
 
   softDucking(reduce = true) {
-    // Slightly lower music volume during deep emotional moments / letter reading
     this.isDucked = reduce;
-    const target = reduce ? 0.08 : 0.2;
-    if (this.gainNode && this.audioContext) {
-      this.gainNode.gain.linearRampToValueAtTime(target, this.audioContext.currentTime + 1.2);
-    }
     if (this.audioElement) {
-      this.audioElement.volume = reduce ? 0.35 : 0.8;
+      this.audioElement.volume = this.isMuted ? 0 : reduce ? 0.35 : this.volume;
     }
     this.notify();
+  }
+
+  // Handle initial browser gesture for cold starts without mixing
+  attachGestureListeners() {
+    if (this.gestureListenersAttached || typeof window === 'undefined') return;
+    this.gestureListenersAttached = true;
+
+    const onGesture = () => {
+      this.removeGestureListeners();
+      // Only start if still paused AND user hasn't explicitly paused!
+      if (!this.isPlaying && !this.userPaused && this.currentTrackId) {
+        this.playTrack(this.currentTrackId);
+      }
+    };
+
+    this._onGesture = onGesture;
+    const events = ['pointerdown', 'touchstart', 'mousedown', 'scroll', 'wheel', 'keydown', 'click'];
+    events.forEach((evt) => {
+      window.addEventListener(evt, onGesture, { capture: true, passive: true });
+    });
+  }
+
+  removeGestureListeners() {
+    if (!this.gestureListenersAttached || typeof window === 'undefined') return;
+    this.gestureListenersAttached = false;
+    if (this._onGesture) {
+      const events = ['pointerdown', 'touchstart', 'mousedown', 'scroll', 'wheel', 'keydown', 'click'];
+      events.forEach((evt) => {
+        window.removeEventListener(evt, this._onGesture, true);
+      });
+      this._onGesture = null;
+    }
   }
 }
 

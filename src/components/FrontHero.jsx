@@ -1,9 +1,9 @@
 import React from 'react';
-import { Heart, Play, Sparkles } from 'lucide-react';
+import { Heart, Play, Sparkles, Mail } from 'lucide-react';
 import { loveStoryConfig } from '../config/loveStoryConfig';
 import { romanticAudio } from '../utils/romanticAudioEngine';
 
-export default function FrontHero({ onOpenSurprise, onOpenNote, onOpenPehliNazar, onOpenQuiz }) {
+export default function FrontHero({ onOpenSurprise, onOpenNote, onOpenPehliNazar, onOpenQuiz, onOpenLetters }) {
   const handlePlaySong = () => {
     romanticAudio.play(0, loveStoryConfig.playlist[0]);
   };
@@ -43,6 +43,15 @@ export default function FrontHero({ onOpenSurprise, onOpenNote, onOpenPehliNazar
             >
               <span>♡ Open Your Surprise</span>
               <span className="btn-arrow">›</span>
+            </button>
+
+            <button
+              type="button"
+              className="hero-btn-open-when"
+              onClick={onOpenLetters}
+            >
+              <Mail size={15} color="#ffd700" />
+              <span>Open When… 💌</span>
             </button>
 
             <button

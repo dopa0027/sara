@@ -6,7 +6,6 @@ import FrontHero from './components/FrontHero';
 import SpecialNoteModal from './components/SpecialNoteModal';
 import ShayariSection from './components/ShayariSection';
 import ProgressBar from './components/ProgressBar';
-import StartScreen from './components/StartScreen';
 import Level1Slider from './components/Level1Slider';
 import Level2Drama from './components/Level2Drama';
 import Level3CatchHeart from './components/Level3CatchHeart';
@@ -18,10 +17,11 @@ import Level7FinalPromise from './components/Level7FinalPromise';
 import FinalSurpriseLetter from './components/FinalSurpriseLetter';
 import PehliNazarExperience from './components/PehliNazarExperience';
 import RelationshipQuiz from './components/RelationshipQuiz';
+import OpenWhenFeature from './components/OpenWhenFeature';
 import { romanticAudio } from './utils/romanticAudioEngine';
 
 export default function App() {
-  const [stage, setStage] = useState(0); // 0 = Front Page (Hero), 1..8 = Challenges, 9 = Final Surprise & Gallery
+  const [stage, setStage] = useState(0); // 0 = Front Page (Hero), 1..8 = Challenges, 9 = Final Surprise & Gallery, 'open-when' = Open When Letters
   const [isNoteOpen, setIsNoteOpen] = useState(false);
 
   useEffect(() => {
@@ -32,8 +32,12 @@ export default function App() {
   const handleNavigate = (view) => {
     if (view === 'home') {
       setStage(0);
-      romanticAudio.play(0);
+      if (!romanticAudio.userPaused) {
+        romanticAudio.playTrack('tera-hone-laga-hoon');
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (view === 'open-when') {
+      setStage('open-when');
     } else if (view === 'pehli-nazar') {
       romanticAudio.pause();
       setStage('pehli-nazar');
@@ -42,7 +46,9 @@ export default function App() {
       setStage('relationship-quiz');
     } else if (view === 'shayari') {
       setStage(0);
-      romanticAudio.play(0);
+      if (!romanticAudio.userPaused) {
+        romanticAudio.playTrack('tera-hone-laga-hoon');
+      }
       setTimeout(() => {
         const el = document.getElementById('shayari-section');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -100,16 +106,29 @@ export default function App() {
                 romanticAudio.pause();
                 setStage('relationship-quiz');
               }}
+              onOpenLetters={() => setStage('open-when')}
             />
             <ShayariSection />
           </>
+        )}
+
+        {/* Open When… 💌 Romantic Letters Collection */}
+        {stage === 'open-when' && (
+          <OpenWhenFeature onBackToHome={() => {
+            setStage(0);
+            if (!romanticAudio.userPaused) {
+              romanticAudio.playTrack('tera-hone-laga-hoon');
+            }
+          }} />
         )}
 
         {/* Pehli Nazar, Pehla Ehsaas Interactive Experience */}
         {stage === 'pehli-nazar' && (
           <PehliNazarExperience onBackToHome={() => {
             setStage(0);
-            romanticAudio.play(0);
+            if (!romanticAudio.userPaused) {
+              romanticAudio.playTrack('tera-hone-laga-hoon');
+            }
           }} />
         )}
 
@@ -117,7 +136,9 @@ export default function App() {
         {stage === 'relationship-quiz' && (
           <RelationshipQuiz onBackToHome={() => {
             setStage(0);
-            romanticAudio.play(0);
+            if (!romanticAudio.userPaused) {
+              romanticAudio.playTrack('tera-hone-laga-hoon');
+            }
           }} />
         )}
 
