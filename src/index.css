@@ -1789,13 +1789,89 @@ body {
   overflow: hidden;
 }
 
-/* Photo Framing */
+/* Photo Framing & Heartwarming Entrance Animation */
 .pn-photo-frame-wrap {
   margin: 0 auto 24px;
   display: inline-block;
   position: relative;
 }
 
+/* Subtle glowing light in the centre of photo entrance */
+.pn-center-glow-spot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.5) 0%, rgba(255, 77, 136, 0.35) 45%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(22px);
+  pointer-events: none;
+  z-index: 0;
+  animation: centerAuraEntrance 1.8s ease-out forwards;
+}
+
+@keyframes centerAuraEntrance {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.6); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+}
+
+/* Outer Floating Stars, Hearts & Golden Sparkles (Never covering Sara's face!) */
+.pn-outer-particles {
+  position: absolute;
+  inset: -22px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.p-particle {
+  position: absolute;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  user-select: none;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.star-p { color: #ffd700; font-size: 15px; }
+.heart-p { color: #ff4d88; font-size: 13px; }
+.gold-p { color: #ffe680; font-size: 16px; }
+
+/* Coordinates outside the photo borders */
+.p-top-left { top: -6px; left: -8px; }
+.p-top-right { top: -6px; right: -8px; }
+.p-mid-left { top: 48%; left: -16px; }
+.p-mid-right { top: 45%; right: -16px; }
+.p-bottom-left { bottom: 10px; left: -10px; }
+.p-bottom-right { bottom: 10px; right: -10px; }
+.p-top-center { top: -14px; left: 48%; }
+.p-bottom-center { bottom: -20px; left: 48%; }
+
+/* Celebratory gentle burst after photo finishes appearing */
+.burst-active .p-particle {
+  opacity: 0.95;
+  animation: particleFloatLoop 3.6s ease-in-out infinite alternate;
+}
+
+.burst-active .p-top-left { animation-delay: 0.1s; }
+.burst-active .p-top-right { animation-delay: 0.35s; }
+.burst-active .p-mid-left { animation-delay: 0.6s; }
+.burst-active .p-mid-right { animation-delay: 0.2s; }
+.burst-active .p-bottom-left { animation-delay: 0.45s; }
+.burst-active .p-bottom-right { animation-delay: 0.7s; }
+.burst-active .p-top-center { animation-delay: 0.25s; }
+.burst-active .p-bottom-center { animation-delay: 0.55s; }
+
+@keyframes particleFloatLoop {
+  0% { transform: translateY(0px) scale(0.9); opacity: 0.7; }
+  50% { transform: translateY(-7px) scale(1.15); opacity: 1; filter: drop-shadow(0 0 10px currentColor); }
+  100% { transform: translateY(5px) scale(0.95); opacity: 0.8; }
+}
+
+/* Smooth Scale-Up & Fade-In Photo Frame */
 .pn-photo-frame {
   width: 240px;
   height: 310px;
@@ -1806,6 +1882,30 @@ body {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 30px rgba(255, 51, 119, 0.3);
   position: relative;
   background: #1e0918;
+  z-index: 1;
+}
+
+.pn-photo-frame.entrance-frame {
+  animation: photoScaleFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 0 35px rgba(245, 197, 99, 0.45), 0 18px 45px rgba(0, 0, 0, 0.75);
+  border-color: rgba(245, 197, 99, 0.75);
+}
+
+@keyframes photoScaleFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.86);
+    filter: brightness(0.7);
+  }
+  60% {
+    opacity: 1;
+    filter: brightness(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 .pn-photo-frame.golden-border-frame {
@@ -1848,6 +1948,7 @@ body {
   color: #ff8da1;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
+  z-index: 4;
 }
 
 /* Typography in Opening */
@@ -1866,6 +1967,7 @@ body {
   font-size: clamp(23px, 4.5vw, 29px);
   color: var(--warm-gold);
   font-weight: 600;
+  line-height: 1.4;
 }
 
 .pn-story-para {
@@ -1873,13 +1975,6 @@ body {
   font-size: clamp(16.5px, 3.2vw, 19.5px);
   line-height: 1.7;
   color: var(--cream-text);
-}
-
-.pn-challenge-para {
-  font-family: var(--font-sans);
-  font-size: 15.5px;
-  color: var(--muted-rose);
-  font-weight: 600;
 }
 
 .pn-action-row {
@@ -1917,14 +2012,6 @@ body {
   color: var(--cream-text);
   line-height: 1.4;
   margin-bottom: 24px;
-}
-
-.pn-whisper-intro {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  color: var(--muted-rose);
-  margin-bottom: 8px;
-  font-style: italic;
 }
 
 /* Options */
@@ -2026,7 +2113,40 @@ body {
   white-space: pre-line;
 }
 
-/* Question 3 Atmosphere */
+/* Question 3: Special Teasing Card for Option A */
+.special-tease-card {
+  background: linear-gradient(135deg, rgba(55, 14, 38, 0.92), rgba(28, 6, 20, 0.96));
+  border: 1px solid rgba(255, 125, 167, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 77, 136, 0.2);
+}
+
+.tease-stage-one {
+  font-weight: 700;
+  color: var(--warm-gold);
+  font-size: 16.5px;
+}
+
+.tease-stage-two {
+  margin-top: 12px;
+  border-top: 1px dashed rgba(255, 125, 167, 0.3);
+  padding-top: 12px;
+}
+
+.tease-stage-deep {
+  font-family: var(--font-serif);
+  font-size: 16.5px;
+  color: #fff2f6;
+  line-height: 1.7;
+}
+
+.tease-retry-hint {
+  font-size: 13px;
+  color: var(--muted-rose);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* Question 3: Dimmed Atmosphere & Option B Reveal */
 .dimmed-romantic-card {
   background: linear-gradient(180deg, rgba(26, 7, 22, 0.96) 0%, rgba(14, 4, 13, 0.98) 100%);
   border-color: rgba(255, 77, 136, 0.35);
@@ -2046,30 +2166,21 @@ body {
 
 .stage-one-line {
   font-family: var(--font-serif);
-  font-size: 20px;
+  font-size: 18px;
   color: var(--warm-gold);
   font-weight: 600;
 }
 
 .stage-two-block {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.stage-two-line {
-  font-family: var(--font-serif);
-  font-size: 17px;
-  color: var(--cream-text);
+  margin-top: 8px;
 }
 
 .stage-two-highlight {
   font-family: var(--font-serif);
-  font-size: 19px;
+  font-size: 19.5px;
   color: #ff8da1;
   font-weight: 700;
-  text-shadow: 0 0 12px rgba(255, 77, 136, 0.5);
+  text-shadow: 0 0 14px rgba(255, 77, 136, 0.5);
 }
 
 /* Sealed Letter (Step 4) */
@@ -2216,74 +2327,66 @@ body {
   transform: rotate(-45deg);
 }
 
+/* Sequential Romantic Messages in Step 5 */
 .final-personal-message-box {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 125, 167, 0.3);
-  border-radius: 20px;
-  padding: 24px 22px;
+  border-radius: 22px;
+  padding: 26px 24px;
   margin: 24px auto;
-  max-width: 520px;
+  max-width: 540px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .msg-lead {
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: 18px;
   color: var(--warm-gold);
   font-weight: 600;
-  margin-bottom: 8px;
+  line-height: 1.5;
 }
 
 .msg-deep {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: 17.5px;
   line-height: 1.7;
   color: var(--cream-text);
 }
 
-/* Authorized Stream Card & Embed */
-.authorized-stream-card {
-  width: 100%;
-  max-width: 500px;
-  margin: 22px auto 0;
-  text-align: center;
+.msg-special-line {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.7;
+  color: #ff8da1;
+  font-weight: 600;
+  text-shadow: 0 0 12px rgba(255, 77, 136, 0.4);
 }
 
-.stream-badge-row {
+.msg-closing-birthday {
   display: flex;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-
-.stream-badge-pill {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 215, 0, 0.35);
+}
+
+.msg-birthday-shout {
+  font-family: var(--font-serif);
+  font-size: 21px;
   font-weight: 700;
-  color: var(--warm-gold);
-  background: rgba(245, 197, 99, 0.12);
-  border: 1px solid rgba(245, 197, 99, 0.35);
-  padding: 4px 12px;
-  border-radius: 14px;
+  color: #ffd700;
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
 }
 
-.stream-video-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(245, 197, 99, 0.4);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 197, 99, 0.2);
-  background: #000;
-}
-
-.stream-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
+.birthday-final-sparkle {
+  color: #ffd700;
+  font-size: 18px;
+  animation: pulseBeat 1.5s infinite;
 }
 
 .final-bottom-controls {
@@ -2301,6 +2404,19 @@ body {
 @keyframes pulseGlowBtn {
   0%, 100% { box-shadow: 0 8px 30px rgba(255, 51, 119, 0.45); }
   50% { box-shadow: 0 12px 40px rgba(255, 51, 119, 0.8), 0 0 25px rgba(255, 215, 0, 0.4); }
+}
+
+/* Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .pn-photo-frame.entrance-frame,
+  .pn-center-glow-spot,
+  .p-particle,
+  .pulse-btn,
+  .birthday-final-sparkle {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @media (max-width: 600px) {
