@@ -18,6 +18,7 @@ import Level7FinalPromise from './components/Level7FinalPromise';
 import FinalSurpriseLetter from './components/FinalSurpriseLetter';
 import PehliNazarExperience from './components/PehliNazarExperience';
 import RelationshipQuiz from './components/RelationshipQuiz';
+import { romanticAudio } from './utils/romanticAudioEngine';
 
 export default function App() {
   const [stage, setStage] = useState(0); // 0 = Front Page (Hero), 1..8 = Challenges, 9 = Final Surprise & Gallery
@@ -31,13 +32,17 @@ export default function App() {
   const handleNavigate = (view) => {
     if (view === 'home') {
       setStage(0);
+      romanticAudio.play(0);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (view === 'pehli-nazar') {
+      romanticAudio.pause();
       setStage('pehli-nazar');
     } else if (view === 'quiz' || view === 'know-me') {
+      romanticAudio.pause();
       setStage('relationship-quiz');
     } else if (view === 'shayari') {
       setStage(0);
+      romanticAudio.play(0);
       setTimeout(() => {
         const el = document.getElementById('shayari-section');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -91,7 +96,10 @@ export default function App() {
               onOpenSurprise={() => setStage(1)}
               onOpenNote={() => setIsNoteOpen(true)}
               onOpenPehliNazar={() => setStage('pehli-nazar')}
-              onOpenQuiz={() => setStage('relationship-quiz')}
+              onOpenQuiz={() => {
+                romanticAudio.pause();
+                setStage('relationship-quiz');
+              }}
             />
             <ShayariSection />
           </>
@@ -99,12 +107,18 @@ export default function App() {
 
         {/* Pehli Nazar, Pehla Ehsaas Interactive Experience */}
         {stage === 'pehli-nazar' && (
-          <PehliNazarExperience onBackToHome={() => setStage(0)} />
+          <PehliNazarExperience onBackToHome={() => {
+            setStage(0);
+            romanticAudio.play(0);
+          }} />
         )}
 
         {/* 10-Question Relationship Quiz: "How Well Do You Know Me, Baby? ❤️" */}
         {stage === 'relationship-quiz' && (
-          <RelationshipQuiz onBackToHome={() => setStage(0)} />
+          <RelationshipQuiz onBackToHome={() => {
+            setStage(0);
+            romanticAudio.play(0);
+          }} />
         )}
 
         {/* 7 Challenges & Special Ganga Ghat Memory */}

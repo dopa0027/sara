@@ -149,6 +149,11 @@ export default function RelationshipQuiz({ onBackToHome }) {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Pause main background music
+    romanticAudio.pause();
+    // Play "Gehra Samandar" the moment the quiz is opened
+    startGehraSamandarAudio();
+
     return () => {
       stopQuizAudio();
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -199,6 +204,10 @@ export default function RelationshipQuiz({ onBackToHome }) {
     setIsTransitioning(false);
     setFeedbackMsg(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Ensure Gehra Samandar continues playing smoothly
+    if (quizAudioRef.current && quizAudioRef.current.paused) {
+      quizAudioRef.current.play().catch(() => {});
+    }
   };
 
   // =========================================================================
@@ -263,11 +272,10 @@ export default function RelationshipQuiz({ onBackToHome }) {
     setIsTransitioning(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // 1. Pause existing general background ambient music
-    romanticAudio.pause();
-
-    // 2. Start audio playback of "Gehra Samandar" (AUDIO ONLY, NO VIDEO)
-    startGehraSamandarAudio();
+    // Ensure Gehra Samandar is playing for results celebration
+    if (quizAudioRef.current && quizAudioRef.current.paused) {
+      startGehraSamandarAudio();
+    }
   };
 
   // =========================================================================
@@ -279,17 +287,28 @@ export default function RelationshipQuiz({ onBackToHome }) {
     setSongPlaying(true);
     setAutoplayBlocked(false);
 
-    // YouTube Official Video ID for "Naina Da Kya Kasoor" (containing "Gehra samandar...")
-    const ytId = "R2_241d7a8E";
-    const embedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&loop=1&playlist=${ytId}`;
-    setStreamSrc(embedUrl);
-
-    // Also trigger HTML5 Audio element if a local MP3 file exists
     if (quizAudioRef.current) {
-      quizAudioRef.current.play().catch(() => {
-        // Autoplay may be restricted on some mobile browsers if not direct user tap
-        setAutoplayBlocked(true);
-      });
+      const playPromise = quizAudioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setSongPlaying(true);
+            setAutoplayBlocked(false);
+          })
+          .catch(() => {
+            setAutoplayBlocked(true);
+            setSongPlaying(false);
+
+            // YouTube fallback stream
+            const ytId = "WfDFWLZgQwE";
+            setStreamSrc(`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&loop=1&playlist=${ytId}`);
+            setTimeout(() => {
+              sendStreamCommand('unMute');
+              sendStreamCommand('setVolume', [100]);
+              sendStreamCommand('playVideo');
+            }, 500);
+          });
+      }
     }
   };
 
@@ -368,7 +387,59 @@ export default function RelationshipQuiz({ onBackToHome }) {
         <span className="quiz-badge">HOW WELL DO YOU KNOW ME? ❤️</span>
       </div>
 
-      {/* Hidden Audio Bridge for "Gehra Samandar" — Strictly Audio Only, No Video */}
+      {/* Romantic Audio Player Pill for "Gehra Samandar" (Naina Da Kya Kasoor) */}
+      <div className="song-playing-pill quiz-audio-pill animate-fade-in" aria-label="Audio Player">
+        <div className="song-pill-left">
+          <button
+            type="button"
+            className="song-toggle-btn"
+            onClick={toggleSong}
+            aria-label={songPlaying ? "Pause song" : "Resume song"}
+          >
+            {songPlaying ? <Pause size={16} /> : <Play size={16} />}
+          </button>
+          <div className="song-pill-info">
+            <span className="song-track-name">Gehra Samandar ❤️</span>
+            <span className="song-track-artist">Naina Da Kya Kasoor · Amit Trivedi</span>
+          </div>
+        </div>
+
+        <div className="song-pill-right">
+          {songPlaying && (
+            <div className="soundwave-bars" aria-hidden="true">
+              <span className="sw-bar" />
+              <span className="sw-bar" />
+              <span className="sw-bar" />
+              <span className="sw-bar" />
+            </div>
+          )}
+          <button
+            type="button"
+            className="song-replay-btn"
+            onClick={replaySong}
+            title="Replay from beginning"
+            aria-label="Replay song"
+          >
+            <RotateCcw size={15} />
+          </button>
+        </div>
+      </div>
+
+      {/* Autoplay blocked fallback banner */}
+      {autoplayBlocked && !songPlaying && (
+        <div className="autoplay-fallback-row animate-pop-in">
+          <button
+            type="button"
+            className="play-our-song-banner-btn"
+            onClick={startGehraSamandarAudio}
+          >
+            <Play size={15} fill="currentColor" />
+            <span>Play Song — Gehra Samandar ❤️</span>
+          </button>
+        </div>
+      )}
+
+      {/* Hidden Audio Engine for "Gehra Samandar" — Audio Only, No Video */}
       <div
         aria-hidden="true"
         style={{
@@ -390,10 +461,19 @@ export default function RelationshipQuiz({ onBackToHome }) {
         />
         <audio
           ref={quizAudioRef}
-          src="./assets/gehra-samandar.mp3"
-          preload="none"
-          onEnded={() => setSongPlaying(false)}
-        />
+          preload="auto"
+          autoPlay
+          playsInline
+          loop
+          onPlay={() => {
+            setSongPlaying(true);
+            setAutoplayBlocked(false);
+          }}
+          onPause={() => setSongPlaying(false)}
+        >
+          <source src="./assets/gehra-samandar.m4a" type="audio/mp4" />
+          <source src="./assets/gehra-samandar.mp3" type="audio/mpeg" />
+        </audio>
       </div>
 
       {/* =================================================================== */}
@@ -515,57 +595,16 @@ export default function RelationshipQuiz({ onBackToHome }) {
             <span className="res-sparkle rsp-5">💗</span>
           </div>
 
-          {/* Audio Player Pill for "Gehra Samandar" (AUDIO ONLY, NO VIDEO) */}
-          <div className="song-playing-pill quiz-audio-pill" aria-label="Audio Player">
-            <div className="song-pill-left">
-              <button
-                type="button"
-                className="song-toggle-btn"
-                onClick={toggleSong}
-                aria-label={songPlaying ? "Pause song" : "Resume song"}
-              >
-                {songPlaying ? <Pause size={16} /> : <Play size={16} />}
-              </button>
-              <div className="song-pill-info">
-                <span className="song-track-name">Gehra Samandar</span>
-                <span className="song-track-artist">Naina Da Kya Kasoor · Andhadhun</span>
-              </div>
+          {/* Romantic Song Lyrics Quote Highlight */}
+          <div className="quiz-song-lyrics-quote animate-pop-in">
+            <div className="lyrics-quote-inner">
+              <Music size={15} color="#ffd700" className="spin-slow" />
+              <p className="lyrics-quote-text">
+                "Gehra samandar, dil dooba jisme… ghayal hua main us pal se ❤️"
+              </p>
             </div>
-
-            <div className="song-pill-right">
-              {songPlaying && (
-                <div className="soundwave-bars" aria-hidden="true">
-                  <span className="sw-bar" />
-                  <span className="sw-bar" />
-                  <span className="sw-bar" />
-                  <span className="sw-bar" />
-                </div>
-              )}
-              <button
-                type="button"
-                className="song-replay-btn"
-                onClick={replaySong}
-                title="Replay from beginning"
-                aria-label="Replay song"
-              >
-                <RotateCcw size={15} />
-              </button>
-            </div>
+            <span className="lyrics-quote-sub">Naina Da Kya Kasoor · Our Special Song 🎶</span>
           </div>
-
-          {/* Autoplay blocked fallback banner */}
-          {autoplayBlocked && !songPlaying && (
-            <div className="autoplay-fallback-row animate-pop-in">
-              <button
-                type="button"
-                className="play-our-song-banner-btn"
-                onClick={startGehraSamandarAudio}
-              >
-                <Play size={15} fill="currentColor" />
-                <span>Play Our Song — Gehra Samandar ❤️</span>
-              </button>
-            </div>
-          )}
 
           {/* Prominent Glowing Score Card */}
           <div className="glowing-score-card animate-pop-in">
