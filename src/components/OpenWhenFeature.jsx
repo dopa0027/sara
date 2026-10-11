@@ -16,20 +16,15 @@ import {
   Moon,
   Clock,
 } from 'lucide-react';
-import { romanticAudio, getPublicAssetUrl } from '../utils/romanticAudioEngine';
+import { romanticAudio } from '../utils/romanticAudioEngine';
 
 // =========================================================================
-// AUDIO CONFIGURATION & GITHUB PAGES COMPATIBILITY
+// AUDIO CONFIGURATION FOR SEQUENTIAL LOVE LETTER RECORDINGS
 // =========================================================================
 const LOVE_LETTER_AUDIO_PATHS = {
   missYouPart1: 'miss-you-1.mp3',
   missYouPart2: 'miss-you-2.mp3',
   missYouPart3: 'miss-you-3.mp3',
-};
-
-// Generates robust asset paths respecting Vite base path (e.g. /sara/ on GitHub Pages)
-const getLoveLetterAudioUrl = (filename) => {
-  return getPublicAssetUrl(`assets/love-letters/${filename}`);
 };
 
 const VOICE_NOTE_PARTS = [
@@ -166,25 +161,23 @@ export default function OpenWhenFeature({ onBackToHome }) {
   const [passwordFeedback, setPasswordFeedback] = useState(null); // { type: 'error' | 'success', msg: string }
   const [isUnlocking, setIsUnlocking] = useState(false);
 
-  // Audio state for Letter 1
+  // Audio state for Letter 1 subscribed from global romanticAudio engine
   const [voicePartIndex, setVoicePartIndex] = useState(0); // 0, 1, 2
   const [isVoicePlaying, setIsVoicePlaying] = useState(false);
   const [voiceAutoplayBlocked, setVoiceAutoplayBlocked] = useState(false);
   const [voiceMissingFile, setVoiceMissingFile] = useState(false);
 
-  const voiceAudioRef = useRef(null);
-  const wasBgMusicPlayingRef = useRef(false);
   const cooldownIntervalRef = useRef(null);
 
-  const stopVoiceAudio = () => {
-    setIsVoicePlaying(false);
-    setVoiceAutoplayBlocked(false);
-    setVoicePartIndex(0);
-    if (voiceAudioRef.current) {
-      voiceAudioRef.current.pause();
-      voiceAudioRef.current.currentTime = 0;
-    }
-  };
+  useEffect(() => {
+    const unsub = romanticAudio.subscribe((state) => {
+      setIsVoicePlaying(state.voiceState.isPlaying);
+      setVoicePartIndex(state.voiceState.partIndex);
+      setVoiceAutoplayBlocked(state.voiceState.autoplayBlocked);
+      setVoiceMissingFile(state.voiceState.isMissingFile);
+    });
+    return unsub;
+  }, []);
 
   const handleCooldownExpired = () => {
     if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
@@ -235,11 +228,7 @@ export default function OpenWhenFeature({ onBackToHome }) {
 
     return () => {
       if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
-      stopVoiceAudio();
-      if (wasBgMusicPlayingRef.current && !romanticAudio.userPaused) {
-        romanticAudio.playTrack('tera-hone-laga-hoon');
-      }
-      wasBgMusicPlayingRef.current = false;
+      romanticAudio.stopVoiceSequence(true);
     };
   }, []);
 
@@ -307,109 +296,32 @@ export default function OpenWhenFeature({ onBackToHome }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (letter.id === 'miss-me') {
-      // Pause background music and start voice recording sequence
-      wasBgMusicPlayingRef.current = romanticAudio.isPlaying && !romanticAudio.userPaused;
-      romanticAudio.pause();
-      initVoicePlayback(0);
+      // Pause background music and start voice recording sequence via Global Audio Manager
+      romanticAudio.playVoiceSequence(VOICE_NOTE_PARTS, 0);
     }
   };
 
   const handleCloseLetter = () => {
-    stopVoiceAudio();
-
-    // Restore background music only if it was previously playing and not paused by the user
-    if (wasBgMusicPlayingRef.current && !romanticAudio.userPaused) {
-      romanticAudio.playTrack('tera-hone-laga-hoon');
-    }
-    wasBgMusicPlayingRef.current = false;
-
+    romanticAudio.stopVoiceSequence(true);
     setActiveLetter(null);
     setScreenStage('envelopes');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // =========================================================================
-  // SEQUENTIAL AUDIO PLAYBACK ENGINE (FOR LETTER 1)
+  // SEQUENTIAL AUDIO PLAYBACK CONTROLS (FOR LETTER 1)
   // Strictly sequential: miss-you-1.mp3 -> miss-you-2.mp3 -> miss-you-3.mp3
   // =========================================================================
   const initVoicePlayback = (partIdx = 0) => {
-    if (partIdx >= VOICE_NOTE_PARTS.length) {
-      // Finished all 3 recordings
-      setIsVoicePlaying(false);
-      setVoicePartIndex(0);
-      return;
-    }
-
-    setVoicePartIndex(partIdx);
-    setVoiceMissingFile(false);
-    setVoiceAutoplayBlocked(false);
-
-    const audio = voiceAudioRef.current;
-    if (!audio) return;
-
-    const fileToPlay = VOICE_NOTE_PARTS[partIdx].file;
-    audio.src = getLoveLetterAudioUrl(fileToPlay);
-
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setIsVoicePlaying(true);
-          setVoiceAutoplayBlocked(false);
-          setVoiceMissingFile(false);
-        })
-        .catch((err) => {
-          setIsVoicePlaying(false);
-          if (err.name === 'NotAllowedError') {
-            setVoiceAutoplayBlocked(true);
-          } else {
-            // Audio file awaiting upload in public/assets/love-letters/
-            setVoiceMissingFile(true);
-          }
-        });
-    }
-  };
-
-  const handleVoiceEnded = () => {
-    // Sequentially advance to the next recording
-    const nextIdx = voicePartIndex + 1;
-    if (nextIdx < VOICE_NOTE_PARTS.length) {
-      initVoicePlayback(nextIdx);
-    } else {
-      setIsVoicePlaying(false);
-      setVoicePartIndex(0);
-    }
-  };
-
-  const handleVoiceError = () => {
-    setIsVoicePlaying(false);
-    setVoiceMissingFile(true);
+    romanticAudio.playVoicePart(partIdx);
   };
 
   const toggleVoiceAudio = () => {
-    const audio = voiceAudioRef.current;
-    if (!audio) return;
-
-    if (isVoicePlaying) {
-      audio.pause();
-      setIsVoicePlaying(false);
-    } else {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsVoicePlaying(true);
-            setVoiceAutoplayBlocked(false);
-          })
-          .catch(() => {
-            initVoicePlayback(voicePartIndex);
-          });
-      }
-    }
+    romanticAudio.toggleVoicePlayback();
   };
 
   const replayVoiceAudio = () => {
-    initVoicePlayback(0);
+    romanticAudio.playVoiceSequence(VOICE_NOTE_PARTS, 0);
   };
 
   // Helper for Envelope Icons
@@ -437,11 +349,7 @@ export default function OpenWhenFeature({ onBackToHome }) {
           type="button"
           className="pn-back-btn"
           onClick={() => {
-            stopVoiceAudio();
-            if (wasBgMusicPlayingRef.current && !romanticAudio.userPaused) {
-              romanticAudio.playTrack('tera-hone-laga-hoon');
-            }
-            wasBgMusicPlayingRef.current = false;
+            romanticAudio.stopVoiceSequence(true);
             onBackToHome();
           }}
           aria-label="Back to home"
@@ -451,15 +359,6 @@ export default function OpenWhenFeature({ onBackToHome }) {
         </button>
         <span className="quiz-badge">A LITTLE BOX OF MY LOVE 💌</span>
       </div>
-
-      {/* Voice Audio Element for Letter 1 (Pure Audio, zero placeholder voice) */}
-      <audio
-        ref={voiceAudioRef}
-        preload="auto"
-        onEnded={handleVoiceEnded}
-        onError={handleVoiceError}
-        style={{ display: 'none' }}
-      />
 
       {/* =================================================================== */}
       {/* 1. INTRODUCTION SCREEN                                              */}

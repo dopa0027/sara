@@ -24,11 +24,7 @@ export default function AudioPlayer() {
   }, []);
 
   const handleTogglePlay = () => {
-    if (isPlaying) {
-      romanticAudio.pause();
-    } else {
-      romanticAudio.play(trackIndex, currentTrack);
-    }
+    romanticAudio.userToggle();
   };
 
   const handleNextTrack = () => {

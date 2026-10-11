@@ -33,14 +33,25 @@ export default function PehliNazarExperience({ onBackToHome }) {
   const [q3WrongFeedback, setQ3WrongFeedback] = useState(null);
   const [q3Correct, setQ3Correct] = useState(false);
 
-  // Song playback state for "Dil Meri Na Sune" (Audio Only - No Video)
+  // Song playback state for "Dil Meri Na Sune" managed globally
   const [songPlaying, setSongPlaying] = useState(false);
-  const [streamSrc, setStreamSrc] = useState('');
-  const [isAudioLoaded, setIsAudioLoaded] = useState(false);
   const [songMessageStage, setSongMessageStage] = useState(1); // 1, 2, 3, 4 for gradual reveals
-  const pehliAudioRef = useRef(null);
-  const pehliIframeRef = useRef(null);
   const timersRef = useRef([]);
+
+  // Subscribe to Global Audio Manager
+  useEffect(() => {
+    const unsub = romanticAudio.subscribe((state) => {
+      setSongPlaying(state.isPlaying && state.currentTrackId === 'dil-meri-na-sune');
+    });
+    return unsub;
+  }, []);
+
+  // Stop song playback cleanly
+  const stopSongPlayback = () => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    romanticAudio.releasePlayback('pehli-nazar');
+  };
 
   // Trigger celebratory burst on opening step 0
   useEffect(() => {
@@ -55,41 +66,6 @@ export default function PehliNazarExperience({ onBackToHome }) {
       timersRef.current.forEach(clearTimeout);
     };
   }, []);
-
-  // Stop song playback cleanly
-  const stopSongPlayback = () => {
-    setSongPlaying(false);
-    timersRef.current.forEach(clearTimeout);
-    timersRef.current = [];
-    if (pehliAudioRef.current) {
-      pehliAudioRef.current.pause();
-      pehliAudioRef.current.currentTime = 0;
-    }
-    if (pehliIframeRef.current && pehliIframeRef.current.contentWindow) {
-      try {
-        pehliIframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }),
-          '*'
-        );
-      } catch {
-        // Safe fallback
-      }
-    }
-  };
-
-  // Send command to embedded stream
-  const sendStreamCommand = (command, args = []) => {
-    if (pehliIframeRef.current && pehliIframeRef.current.contentWindow) {
-      try {
-        pehliIframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: command, args }),
-          '*'
-        );
-      } catch {
-        // Fallback
-      }
-    }
-  };
 
   // Schedule gradual message reveals in Step 5
   const startMessageSequence = () => {
@@ -195,57 +171,22 @@ export default function PehliNazarExperience({ onBackToHome }) {
   // Starts ONLY upon explicit user click on "Haan, sunao na… ❤️"
   // =========================================================================
   const startDilMeriNaSune = () => {
-    // 1. Explicitly pause general background ambient music
-    romanticAudio.pause();
-
-    // 2. Advance step to reveal
+    // 1. Advance step to reveal
     setStep(5);
-    setSongPlaying(true);
 
-    // 3. Start audio stream
-    const ytId = loveStoryConfig.pehliNazarSong.youtubeId || 'YZLKoG_vhDY';
-    const embedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&loop=1&playlist=${ytId}`;
-    setStreamSrc(embedUrl);
+    // 2. Claim exclusive playback via Global Audio Manager
+    romanticAudio.claimPlayback('pehli-nazar', 'dil-meri-na-sune', { userInitiated: true });
 
-    // Also trigger HTML5 local audio if available
-    if (pehliAudioRef.current) {
-      pehliAudioRef.current.play().then(() => {
-        setIsAudioLoaded(true);
-      }).catch(() => {
-        setIsAudioLoaded(false);
-      });
-    }
-
-    // 4. Start sequential messages
+    // 3. Start sequential messages
     startMessageSequence();
   };
 
   const toggleSong = () => {
-    if (songPlaying) {
-      // Pause
-      setSongPlaying(false);
-      if (isAudioLoaded && pehliAudioRef.current) {
-        pehliAudioRef.current.pause();
-      }
-      sendStreamCommand('pauseVideo');
-    } else {
-      // Resume
-      setSongPlaying(true);
-      if (isAudioLoaded && pehliAudioRef.current) {
-        pehliAudioRef.current.play();
-      }
-      sendStreamCommand('playVideo');
-    }
+    romanticAudio.userToggle();
   };
 
   const replaySong = () => {
-    setSongPlaying(true);
-    if (isAudioLoaded && pehliAudioRef.current) {
-      pehliAudioRef.current.currentTime = 0;
-      pehliAudioRef.current.play();
-    }
-    sendStreamCommand('seekTo', [0, true]);
-    sendStreamCommand('playVideo');
+    romanticAudio.replayTrack('dil-meri-na-sune');
     startMessageSequence();
   };
 
@@ -266,34 +207,6 @@ export default function PehliNazarExperience({ onBackToHome }) {
           <span>Home</span>
         </button>
         <span className="pn-badge">PEHLI NAZAR, PEHLA EHSAAS ❤️</span>
-      </div>
-
-      {/* Hidden Audio Bridge for "Dil Meri Na Sune" — Strictly Audio Only, No Video Displayed */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'fixed',
-          top: '-9999px',
-          left: '-9999px',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-      >
-        <iframe
-          ref={pehliIframeRef}
-          title="Dil Meri Na Sune Audio Stream"
-          src={streamSrc}
-          allow="autoplay; encrypted-media"
-          tabIndex="-1"
-        />
-        <audio
-          ref={pehliAudioRef}
-          src={loveStoryConfig.pehliNazarSong.audioSrc}
-          preload="none"
-          onEnded={() => setSongPlaying(false)}
-        />
       </div>
 
       {/* =================================================================== */}

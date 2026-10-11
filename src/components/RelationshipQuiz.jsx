@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Sparkles, Trophy, Play, Pause, RotateCcw, ArrowRight, ArrowLeft, Volume2, Music, CheckCircle2 } from 'lucide-react';
+import { Heart, Trophy, Play, Pause, RotateCcw, ArrowRight, ArrowLeft, Music } from 'lucide-react';
 import { loveStoryConfig } from '../config/loveStoryConfig';
-import { romanticAudio, getPublicAssetUrl } from '../utils/romanticAudioEngine';
+import { romanticAudio } from '../utils/romanticAudioEngine';
 
 // =========================================================================
 // THE 10 QUESTIONS DATA
@@ -140,58 +140,38 @@ export default function RelationshipQuiz({ onBackToHome }) {
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
   // Audio Playback state for "Gehra Samandar" (AUDIO ONLY, NO VIDEO)
+  // Song playback state for "Gehra Samandar" managed globally
   const [songPlaying, setSongPlaying] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
-  const [streamSrc, setStreamSrc] = useState('');
-  const quizIframeRef = useRef(null);
-  const quizAudioRef = useRef(null);
   const timerRef = useRef(null);
+
+  // Audio helpers
+  const stopQuizAudio = () => {
+    romanticAudio.releasePlayback('quiz');
+  };
+
+  const startGehraSamandarAudio = (options = {}) => {
+    romanticAudio.claimPlayback('quiz', 'gehra-samandar', options);
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Pause main background music
-    romanticAudio.pause();
-    // Play "Gehra Samandar" the moment the quiz is opened
+
+    // Subscribe to Global Audio Manager
+    const unsub = romanticAudio.subscribe((state) => {
+      setSongPlaying(state.isPlaying && state.currentTrackId === 'gehra-samandar');
+      setAutoplayBlocked(!state.isPlaying && state.currentTrackId === 'gehra-samandar' && !state.userPaused);
+    });
+
+    // Play "Gehra Samandar" via the Global Audio Manager
     startGehraSamandarAudio();
 
     return () => {
+      unsub();
       stopQuizAudio();
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
-
-  // Stop quiz audio cleanly
-  const stopQuizAudio = () => {
-    setSongPlaying(false);
-    if (quizAudioRef.current) {
-      quizAudioRef.current.pause();
-      quizAudioRef.current.currentTime = 0;
-    }
-    if (quizIframeRef.current && quizIframeRef.current.contentWindow) {
-      try {
-        quizIframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }),
-          '*'
-        );
-      } catch {
-        // Safe fallback
-      }
-    }
-  };
-
-  // Send command to background iframe stream
-  const sendStreamCommand = (command, args = []) => {
-    if (quizIframeRef.current && quizIframeRef.current.contentWindow) {
-      try {
-        quizIframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: command, args }),
-          '*'
-        );
-      } catch {
-        // Fallback
-      }
-    }
-  };
 
   // =========================================================================
   // START QUIZ
@@ -204,10 +184,6 @@ export default function RelationshipQuiz({ onBackToHome }) {
     setIsTransitioning(false);
     setFeedbackMsg(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Ensure Gehra Samandar continues playing smoothly
-    if (quizAudioRef.current && quizAudioRef.current.paused) {
-      quizAudioRef.current.play().catch(() => {});
-    }
   };
 
   // =========================================================================
@@ -267,73 +243,27 @@ export default function RelationshipQuiz({ onBackToHome }) {
     return score;
   };
 
-  const handleFinishQuiz = (finalAnswers) => {
+  const handleFinishQuiz = (_finalAnswers) => {
     setScreenStage('result');
     setIsTransitioning(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Ensure Gehra Samandar is playing for results celebration
-    if (quizAudioRef.current && quizAudioRef.current.paused) {
-      startGehraSamandarAudio();
+    if (!romanticAudio.userPaused) {
+      romanticAudio.claimPlayback('quiz', 'gehra-samandar');
     }
   };
 
   // =========================================================================
-  // AUDIO PLAYBACK: "Gehra Samandar" (Naina Da Kya Kasoor)
-  // Audio only, absolutely NO video player displayed!
+  // AUDIO CONTROLS: "Gehra Samandar" (Naina Da Kya Kasoor)
   // =========================================================================
-  const startGehraSamandarAudio = () => {
-    romanticAudio.pause();
-    setSongPlaying(true);
-    setAutoplayBlocked(false);
-
-    if (quizAudioRef.current) {
-      const playPromise = quizAudioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setSongPlaying(true);
-            setAutoplayBlocked(false);
-          })
-          .catch(() => {
-            setAutoplayBlocked(true);
-            setSongPlaying(false);
-
-            // YouTube fallback stream
-            const ytId = "WfDFWLZgQwE";
-            setStreamSrc(`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&controls=0&loop=1&playlist=${ytId}`);
-            setTimeout(() => {
-              sendStreamCommand('unMute');
-              sendStreamCommand('setVolume', [100]);
-              sendStreamCommand('playVideo');
-            }, 500);
-          });
-      }
-    }
-  };
 
   const toggleSong = () => {
-    if (songPlaying) {
-      setSongPlaying(false);
-      if (quizAudioRef.current) quizAudioRef.current.pause();
-      sendStreamCommand('pauseVideo');
-    } else {
-      setSongPlaying(true);
-      setAutoplayBlocked(false);
-      if (quizAudioRef.current) quizAudioRef.current.play();
-      sendStreamCommand('playVideo');
-    }
+    romanticAudio.userToggle();
   };
 
   const replaySong = () => {
-    setSongPlaying(true);
-    setAutoplayBlocked(false);
-    if (quizAudioRef.current) {
-      quizAudioRef.current.currentTime = 0;
-      quizAudioRef.current.play();
-    }
-    sendStreamCommand('seekTo', [0, true]);
-    sendStreamCommand('playVideo');
+    romanticAudio.replayTrack('gehra-samandar');
   };
 
   // =========================================================================
@@ -431,7 +361,7 @@ export default function RelationshipQuiz({ onBackToHome }) {
           <button
             type="button"
             className="play-our-song-banner-btn"
-            onClick={startGehraSamandarAudio}
+            onClick={() => romanticAudio.claimPlayback('quiz', 'gehra-samandar', { userInitiated: true })}
           >
             <Play size={15} fill="currentColor" />
             <span>Play Song — Gehra Samandar ❤️</span>
@@ -439,42 +369,6 @@ export default function RelationshipQuiz({ onBackToHome }) {
         </div>
       )}
 
-      {/* Hidden Audio Engine for "Gehra Samandar" — Audio Only, No Video */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'fixed',
-          top: '-9999px',
-          left: '-9999px',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-      >
-        <iframe
-          ref={quizIframeRef}
-          title="Gehra Samandar Background Audio"
-          src={streamSrc}
-          allow="autoplay; encrypted-media"
-          tabIndex="-1"
-        />
-        <audio
-          ref={quizAudioRef}
-          preload="auto"
-          autoPlay
-          playsInline
-          loop
-          onPlay={() => {
-            setSongPlaying(true);
-            setAutoplayBlocked(false);
-          }}
-          onPause={() => setSongPlaying(false)}
-        >
-          <source src={getPublicAssetUrl('assets/gehra-samandar.m4a')} type="audio/mp4" />
-          <source src={getPublicAssetUrl('assets/gehra-samandar.mp3')} type="audio/mpeg" />
-        </audio>
-      </div>
 
       {/* =================================================================== */}
       {/* 1. QUIZ INTRODUCTION SCREEN                                         */}
