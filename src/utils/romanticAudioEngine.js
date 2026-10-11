@@ -176,11 +176,8 @@ class RomanticAudioEngine {
           return;
         }
       } catch {
-        // If file not found (404) or blocked, fallback seamlessly to ambient synth
-        this.startSynthMusic();
+        // Handled by AudioBridge streaming engine
       }
-    } else {
-      this.startSynthMusic();
     }
 
     this.notify();
